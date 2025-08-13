@@ -1,0 +1,41 @@
+.insurance-cases {
+  padding: 0;
+}
+
+.results-summary {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.results-summary p {
+  margin: 0;
+}
+
+/* Table Responsive Enhancements */
+@media (max-width: 1200px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .table {
+    min-width: 1000px;
+  }
+}
+
+@media (max-width: 768px) {
+  .results-summary {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .table th,
+  .table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+}
