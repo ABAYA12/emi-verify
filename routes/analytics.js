@@ -3,7 +3,7 @@ const router = express.Router();
 const InsuranceCase = require('../models/InsuranceCase');
 const DocumentVerification = require('../models/DocumentVerification');
 
-// Get Insurance Cases KPIs
+// Get Insurance Cases KPIs with Updated Revenue Calculation
 router.get('/insurance-cases', async (req, res) => {
   try {
     const dateFilter = {
@@ -19,7 +19,10 @@ router.get('/insurance-cases', async (req, res) => {
       pendingCases,
       casesByCountry,
       fraudCases,
-      agentPerformance
+      agentPerformance,
+      totalProcessingFees,
+      totalAmountPaid,
+      statusBreakdown
     ] = await Promise.all([
       InsuranceCase.getTotalCases(dateFilter),
       InsuranceCase.getClosedCases(dateFilter),
@@ -27,12 +30,16 @@ router.get('/insurance-cases', async (req, res) => {
       InsuranceCase.getPendingCases(dateFilter),
       InsuranceCase.getCasesByCountry(dateFilter),
       InsuranceCase.getFraudCases(dateFilter),
-      InsuranceCase.getAgentPerformance(dateFilter)
+      InsuranceCase.getAgentPerformance(dateFilter),
+      InsuranceCase.getTotalProcessingFees(dateFilter),
+      InsuranceCase.getTotalAmountPaid(dateFilter),
+      InsuranceCase.getStatusBreakdown(dateFilter)
     ]);
 
     // Calculate additional metrics
     const closureRate = totalCases > 0 ? (closedCases / totalCases * 100).toFixed(2) : 0;
     const fraudRate = totalCases > 0 ? (fraudCases / totalCases * 100).toFixed(2) : 0;
+    const totalRevenue = totalProcessingFees + totalAmountPaid; // Separate calculation
 
     const kpis = {
       overview: {
@@ -42,11 +49,17 @@ router.get('/insurance-cases', async (req, res) => {
         case_closure_rate: parseFloat(closureRate),
         average_turnaround_time: Math.round(avgTurnaround * 100) / 100
       },
+      financial_metrics: {
+        total_processing_fees: totalProcessingFees,
+        total_amount_paid: totalAmountPaid,
+        total_revenue: totalRevenue // Processing Fee + Amount Paid
+      },
       fraud_analysis: {
         total_fraud_cases: fraudCases,
         fraud_rate_percentage: parseFloat(fraudRate),
         non_fraud_cases: totalCases - fraudCases
       },
+      status_breakdown: statusBreakdown,
       geographical_distribution: casesByCountry,
       agent_performance: agentPerformance.map(agent => ({
         ...agent,
@@ -91,7 +104,8 @@ router.get('/document-verifications', async (req, res) => {
       totalProcessingFees,
       totalAgentPayments,
       outstandingPayments,
-      agentPerformance
+      agentPerformance,
+      statusBreakdown
     ] = await Promise.all([
       DocumentVerification.getTotalVerifications(dateFilter),
       DocumentVerification.getCompletedVerifications(dateFilter),
@@ -100,15 +114,16 @@ router.get('/document-verifications', async (req, res) => {
       DocumentVerification.getVerificationsByDocumentType(dateFilter),
       DocumentVerification.getVerificationsByCountry(dateFilter),
       DocumentVerification.getTotalProcessingFees(dateFilter),
-      DocumentVerification.getTotalAgentPayments(dateFilter),
+      DocumentVerification.getTotalAmountPaid(dateFilter),
       DocumentVerification.getOutstandingPayments(dateFilter),
-      DocumentVerification.getAgentPerformance(dateFilter)
+      DocumentVerification.getAgentPerformance(dateFilter),
+      DocumentVerification.getStatusBreakdown(dateFilter)
     ]);
 
     // Calculate additional metrics
     const completionRate = totalVerifications > 0 ? 
       (completedVerifications / totalVerifications * 100).toFixed(2) : 0;
-    const netRevenue = totalProcessingFees - totalAgentPayments;
+    const totalRevenue = totalProcessingFees + totalAgentPayments; // Processing Fee + Amount Paid
 
     const kpis = {
       overview: {
@@ -119,14 +134,15 @@ router.get('/document-verifications', async (req, res) => {
         average_turnaround_time: Math.round(avgTurnaround * 100) / 100
       },
       financial_metrics: {
-        total_processing_fees_collected: totalProcessingFees,
-        total_agent_payments: totalAgentPayments,
-        net_revenue: netRevenue,
+        total_processing_fees: totalProcessingFees,
+        total_amount_paid: totalAgentPayments,
+        total_revenue: totalRevenue, // Processing Fee + Amount Paid
         outstanding_payments: {
           count: outstandingPayments.count,
           amount: outstandingPayments.amount
         }
       },
+      status_breakdown: statusBreakdown,
       document_type_distribution: verificationsByDocType,
       geographical_distribution: verificationsByCountry,
       agent_performance: agentPerformance.map(agent => ({
@@ -166,16 +182,20 @@ router.get('/dashboard', async (req, res) => {
       closedInsuranceCases,
       totalDocVerifications,
       completedDocVerifications,
-      totalProcessingFees,
-      totalAgentPayments,
+      insuranceProcessingFees,
+      insuranceAmountPaid,
+      docProcessingFees,
+      docAmountPaid,
       fraudCases
     ] = await Promise.all([
       InsuranceCase.getTotalCases(dateFilter),
       InsuranceCase.getClosedCases(dateFilter),
       DocumentVerification.getTotalVerifications(dateFilter),
       DocumentVerification.getCompletedVerifications(dateFilter),
+      InsuranceCase.getTotalProcessingFees(dateFilter),
+      InsuranceCase.getTotalAmountPaid(dateFilter),
       DocumentVerification.getTotalProcessingFees(dateFilter),
-      DocumentVerification.getTotalAgentPayments(dateFilter),
+      DocumentVerification.getTotalAmountPaid(dateFilter),
       InsuranceCase.getFraudCases(dateFilter)
     ]);
 
@@ -202,9 +222,9 @@ router.get('/dashboard', async (req, res) => {
           ((completedDocVerifications / totalDocVerifications) * 100).toFixed(2) : 0
       },
       financial_overview: {
-        total_processing_fees: totalProcessingFees,
-        total_agent_payments: totalAgentPayments,
-        net_revenue: totalProcessingFees - totalAgentPayments
+        total_processing_fees: insuranceProcessingFees + docProcessingFees,
+        total_amount_paid: insuranceAmountPaid + docAmountPaid,
+        total_revenue: (insuranceProcessingFees + insuranceAmountPaid) + (docProcessingFees + docAmountPaid) // Processing Fee + Amount Paid for both
       }
     };
 

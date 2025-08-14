@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSave, FaTimes } from 'react-icons/fa';
+import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
+import './InsuranceCases.css';
 
 const AddInsuranceCase = () => {
   const navigate = useNavigate();
@@ -13,18 +14,55 @@ const AddInsuranceCase = () => {
     country: '',
     date_received: '',
     date_closed: '',
-    turn_around_time: '',
-    case_status: '',
     policy_number: '',
     case_type: '',
     insurance_company: '',
     is_fraud: false,
     fraud_type: '',
     comment: '',
-    fraud_source: ''
+    fraud_source: '',
+    expected_days: 7,
+    processing_fee: 0,
+    amount_paid: 0
   });
 
-  const handleChange = (e) => {
+  const caseTypes = [
+    'Death Claim',
+    'Disability Claim',
+    'Health Claim',
+    'Auto Claim',
+    'Property Claim',
+    'Travel Claim',
+    'Liability Claim',
+    'Other'
+  ];
+
+  const fraudTypes = [
+    'Application Fraud',
+    'Claim Fraud',
+    'Identity Fraud',
+    'Premium Fraud',
+    'Medical Fraud',
+    'Staged Accident',
+    'Other'
+  ];
+
+  const fraudSources = [
+    'Internal Investigation',
+    'Customer Report',
+    'Partner Report',
+    'Data Analysis',
+    'External Tip',
+    'Audit Finding',
+    'Other'
+  ];
+
+  const countries = [
+    'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Uganda', 'Tanzania',
+    'Rwanda', 'Botswana', 'Zambia', 'Malawi', 'Zimbabwe', 'Other'
+  ];
+
+  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -34,30 +72,39 @@ const AddInsuranceCase = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (!formData.agent_name || !formData.insured_name) {
+      toast.error('Agent name and insured name are required');
+      return;
+    }
 
     try {
-      // Prepare data for submission
-      const submitData = { ...formData };
+      setLoading(true);
       
-      // Convert empty strings to null
-      Object.keys(submitData).forEach(key => {
-        if (submitData[key] === '') {
-          submitData[key] = null;
-        }
-      });
-
-      // Convert turn_around_time to number if provided
-      if (submitData.turn_around_time) {
-        submitData.turn_around_time = parseInt(submitData.turn_around_time);
-      }
+      // Prepare data for submission (remove empty strings and convert numbers)
+      const submitData = {
+        ...formData,
+        expected_days: parseInt(formData.expected_days) || 7,
+        processing_fee: parseFloat(formData.processing_fee) || 0,
+        amount_paid: parseFloat(formData.amount_paid) || 0,
+        // Convert empty strings to null for optional fields
+        date_received: formData.date_received || null,
+        date_closed: formData.date_closed || null,
+        policy_number: formData.policy_number || null,
+        case_type: formData.case_type || null,
+        insurance_company: formData.insurance_company || null,
+        fraud_type: formData.fraud_type || null,
+        comment: formData.comment || null,
+        fraud_source: formData.fraud_source || null,
+        country: formData.country || null
+      };
 
       await apiService.insuranceCases.create(submitData);
       toast.success('Insurance case created successfully');
       navigate('/insurance-cases');
-    } catch (err) {
-      console.error('Error creating insurance case:', err);
-      toast.error('Failed to create insurance case');
+    } catch (error) {
+      console.error('Error creating insurance case:', error);
+      toast.error(error.response?.data?.message || 'Failed to create insurance case');
     } finally {
       setLoading(false);
     }
@@ -68,249 +115,271 @@ const AddInsuranceCase = () => {
   };
 
   return (
-    <div className="add-insurance-case">
+    <div className="page-container">
       <div className="page-header">
-        <div>
-          <h1 className="page-title">Add Insurance Case</h1>
-          <p className="page-subtitle">Create a new insurance case record</p>
-        </div>
+        <h2>Add New Insurance Case</h2>
+        <p>Create a new insurance case record</p>
       </div>
 
       <div className="form-container">
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Agent Name</label>
-              <input
-                type="text"
-                name="agent_name"
-                className="form-control"
-                value={formData.agent_name}
-                onChange={handleChange}
-                placeholder="Enter agent name"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Insured Name</label>
-              <input
-                type="text"
-                name="insured_name"
-                className="form-control"
-                value={formData.insured_name}
-                onChange={handleChange}
-                placeholder="Enter insured person's name"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Country</label>
-              <input
-                type="text"
-                name="country"
-                className="form-control"
-                value={formData.country}
-                onChange={handleChange}
-                placeholder="Enter country"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Policy Number</label>
-              <input
-                type="text"
-                name="policy_number"
-                className="form-control"
-                value={formData.policy_number}
-                onChange={handleChange}
-                placeholder="Enter policy number"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Date Received</label>
-              <input
-                type="date"
-                name="date_received"
-                className="form-control"
-                value={formData.date_received}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Date Closed</label>
-              <input
-                type="date"
-                name="date_closed"
-                className="form-control"
-                value={formData.date_closed}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Case Status</label>
-              <select
-                name="case_status"
-                className="form-control"
-                value={formData.case_status}
-                onChange={handleChange}
-              >
-                <option value="">Select status</option>
-                <option value="Open">Open</option>
-                <option value="Closed">Closed</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Under Review">Under Review</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Turnaround Time (days)</label>
-              <input
-                type="number"
-                name="turn_around_time"
-                className="form-control"
-                value={formData.turn_around_time}
-                onChange={handleChange}
-                placeholder="Enter number of days"
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Case Type</label>
-              <select
-                name="case_type"
-                className="form-control"
-                value={formData.case_type}
-                onChange={handleChange}
-              >
-                <option value="">Select case type</option>
-                <option value="Property Damage">Property Damage</option>
-                <option value="Auto Accident">Auto Accident</option>
-                <option value="Health Insurance">Health Insurance</option>
-                <option value="Life Insurance">Life Insurance</option>
-                <option value="Liability">Liability</option>
-                <option value="Workers Compensation">Workers Compensation</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Insurance Company</label>
-              <input
-                type="text"
-                name="insurance_company"
-                className="form-control"
-                value={formData.insurance_company}
-                onChange={handleChange}
-                placeholder="Enter insurance company name"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <div className="d-flex align-items-center">
+        <form onSubmit={handleSubmit} className="insurance-form">
+          <div className="form-grid">
+            {/* Basic Information */}
+            <div className="form-section">
+              <h3>Basic Information</h3>
+              
+              <div className="form-group">
+                <label htmlFor="agent_name">Agent Name *</label>
                 <input
-                  type="checkbox"
-                  name="is_fraud"
-                  id="is_fraud"
-                  checked={formData.is_fraud}
-                  onChange={handleChange}
-                  style={{ marginRight: '8px' }}
+                  type="text"
+                  id="agent_name"
+                  name="agent_name"
+                  value={formData.agent_name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter agent name"
                 />
-                <label htmlFor="is_fraud" className="form-label mb-0">
-                  Is this a fraud case?
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="insured_name">Insured Name *</label>
+                <input
+                  type="text"
+                  id="insured_name"
+                  name="insured_name"
+                  value={formData.insured_name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter insured person's name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="country">Country</label>
+                <select
+                  id="country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Country</option>
+                  {countries.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Case Details */}
+            <div className="form-section">
+              <h3>Case Details</h3>
+              
+              <div className="form-group">
+                <label htmlFor="policy_number">Policy Number</label>
+                <input
+                  type="text"
+                  id="policy_number"
+                  name="policy_number"
+                  value={formData.policy_number}
+                  onChange={handleInputChange}
+                  placeholder="Enter policy number"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="case_type">Case Type</label>
+                <select
+                  id="case_type"
+                  name="case_type"
+                  value={formData.case_type}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Case Type</option>
+                  {caseTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="insurance_company">Insurance Company</label>
+                <input
+                  type="text"
+                  id="insurance_company"
+                  name="insurance_company"
+                  value={formData.insurance_company}
+                  onChange={handleInputChange}
+                  placeholder="Enter insurance company name"
+                />
+              </div>
+            </div>
+
+            {/* Dates and Timeline */}
+            <div className="form-section">
+              <h3>Timeline</h3>
+              
+              <div className="form-group">
+                <label htmlFor="date_received">Date Received</label>
+                <input
+                  type="date"
+                  id="date_received"
+                  name="date_received"
+                  value={formData.date_received}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="date_closed">Date Closed</label>
+                <input
+                  type="date"
+                  id="date_closed"
+                  name="date_closed"
+                  value={formData.date_closed}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="expected_days">Expected Days</label>
+                <input
+                  type="number"
+                  id="expected_days"
+                  name="expected_days"
+                  value={formData.expected_days}
+                  onChange={handleInputChange}
+                  min="1"
+                  max="365"
+                  placeholder="Expected processing days"
+                />
+              </div>
+            </div>
+
+            {/* Financial Information */}
+            <div className="form-section">
+              <h3>Financial Information</h3>
+              
+              <div className="form-group">
+                <label htmlFor="processing_fee">Processing Fee</label>
+                <input
+                  type="number"
+                  id="processing_fee"
+                  name="processing_fee"
+                  value={formData.processing_fee}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="amount_paid">Amount Paid</label>
+                <input
+                  type="number"
+                  id="amount_paid"
+                  name="amount_paid"
+                  value={formData.amount_paid}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            {/* Fraud Information */}
+            <div className="form-section">
+              <h3>Fraud Assessment</h3>
+              
+              <div className="form-group checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    name="is_fraud"
+                    checked={formData.is_fraud}
+                    onChange={handleInputChange}
+                  />
+                  Mark as Fraud Case
                 </label>
               </div>
-            </div>
-          </div>
 
-          {formData.is_fraud && (
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Fraud Type</label>
-                <select
-                  name="fraud_type"
-                  className="form-control"
-                  value={formData.fraud_type}
-                  onChange={handleChange}
-                >
-                  <option value="">Select fraud type</option>
-                  <option value="Documented Fraud">Documented Fraud</option>
-                  <option value="Suspected Fraud">Suspected Fraud</option>
-                  <option value="Premium Fraud">Premium Fraud</option>
-                  <option value="Claims Fraud">Claims Fraud</option>
-                  <option value="Application Fraud">Application Fraud</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Fraud Source</label>
-                <select
-                  name="fraud_source"
-                  className="form-control"
-                  value={formData.fraud_source}
-                  onChange={handleChange}
-                >
-                  <option value="">Select fraud source</option>
-                  <option value="Internal Investigation">Internal Investigation</option>
-                  <option value="External Report">External Report</option>
-                  <option value="Customer Report">Customer Report</option>
-                  <option value="Agent Report">Agent Report</option>
-                  <option value="Automated Detection">Automated Detection</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-          )}
+              {formData.is_fraud && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="fraud_type">Fraud Type</label>
+                    <select
+                      id="fraud_type"
+                      name="fraud_type"
+                      value={formData.fraud_type}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select Fraud Type</option>
+                      {fraudTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Comments</label>
-              <textarea
-                name="comment"
-                className="form-control"
-                rows="4"
-                value={formData.comment}
-                onChange={handleChange}
-                placeholder="Enter any additional comments or notes..."
-              />
+                  <div className="form-group">
+                    <label htmlFor="fraud_source">Fraud Source</label>
+                    <select
+                      id="fraud_source"
+                      name="fraud_source"
+                      value={formData.fraud_source}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select Fraud Source</option>
+                      {fraudSources.map(source => (
+                        <option key={source} value={source}>{source}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Comments */}
+            <div className="form-section full-width">
+              <h3>Comments</h3>
+              
+              <div className="form-group">
+                <label htmlFor="comment">Comments/Notes</label>
+                <textarea
+                  id="comment"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleInputChange}
+                  rows="4"
+                  placeholder="Add any additional comments or notes..."
+                />
+              </div>
             </div>
           </div>
 
           <div className="form-actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
+            <button 
+              type="button" 
               onClick={handleCancel}
+              className="btn btn-secondary"
               disabled={loading}
             >
               <FaTimes /> Cancel
             </button>
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               className="btn btn-primary"
               disabled={loading}
             >
-              {loading ? (
-                <>
-                  <div className="spinner"></div> Creating...
-                </>
-              ) : (
-                <>
-                  <FaSave /> Create Insurance Case
-                </>
-              )}
+              {loading ? <FaSpinner className="fa-spin" /> : <FaSave />}
+              {loading ? 'Creating...' : 'Create Case'}
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="info-note">
+        <p><strong>Note:</strong> Turnaround time and case status will be automatically calculated based on the dates and expected processing days.</p>
       </div>
     </div>
   );

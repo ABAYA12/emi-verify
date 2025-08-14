@@ -12,20 +12,18 @@ const EditDocumentVerification = () => {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [formData, setFormData] = useState({
     agent_name: '',
+    ars_number: '',
+    check_id: '',
     applicant_name: '',
-    email_address: '',
-    phone_number: '',
-    date_received: '',
     document_type: '',
     country: '',
-    embassy_source: '',
-    language_version: '',
-    processing_fee: '',
-    payment_status: 'PENDING',
-    turn_around_time: '',
-    turn_around_status: 'IN_PROGRESS',
-    rush_order: false,
-    additional_notes: ''
+    region_town: '',
+    date_received: '',
+    date_closed: '',
+    processing_fee: 0,
+    amount_paid: 0,
+    payment_status: '',
+    expected_days: 5
   });
 
   const documentTypes = [
@@ -38,88 +36,97 @@ const EditDocumentVerification = () => {
     'Death Certificate',
     'Education Certificate',
     'Medical Certificate',
+    'Police Clearance',
+    'Business Registration',
     'Other'
   ];
 
   const paymentStatuses = [
-    { value: 'PAID', label: 'Paid' },
-    { value: 'PENDING', label: 'Pending' },
-    { value: 'UNPAID', label: 'Unpaid' }
+    'PAID',
+    'PENDING',
+    'UNPAID',
+    'PARTIAL',
+    'CANCELLED'
   ];
 
-  const turnAroundStatuses = [
-    { value: 'RECEIVED', label: 'Document Received' },
-    { value: 'IN_PROGRESS', label: 'In Progress' },
-    { value: 'UNDER_REVIEW', label: 'Under Review' },
-    { value: 'COMPLETED', label: 'Verification Complete' },
-    { value: 'RETURNED', label: 'Returned to Client' }
+  const countries = [
+    'Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Uganda', 'Tanzania',
+    'Rwanda', 'Botswana', 'Zambia', 'Malawi', 'Zimbabwe', 'Other'
   ];
 
   useEffect(() => {
-    fetchVerification();
+    fetchDocumentVerification();
   }, [id]);
 
-  const fetchVerification = async () => {
+  const fetchDocumentVerification = async () => {
     try {
       setFetchLoading(true);
-      const response = await apiService.documentVerifications.getById(id);
+      const response = await apiService.documentVerifications.getForEdit(id);
       const verification = response.data.data;
       
-      // Format the data for the form
+      // Pre-fill the form with exact database values
       setFormData({
         agent_name: verification.agent_name || '',
+        ars_number: verification.ars_number || '',
+        check_id: verification.check_id || '',
         applicant_name: verification.applicant_name || '',
-        email_address: verification.email_address || '',
-        phone_number: verification.phone_number || '',
-        date_received: verification.date_received ? verification.date_received.split('T')[0] : '',
         document_type: verification.document_type || '',
         country: verification.country || '',
-        embassy_source: verification.embassy_source || '',
-        language_version: verification.language_version || '',
-        processing_fee: verification.processing_fee || '',
-        payment_status: verification.payment_status || 'PENDING',
-        turn_around_time: verification.turn_around_time || '',
-        turn_around_status: verification.turn_around_status || 'IN_PROGRESS',
-        rush_order: verification.rush_order || false,
-        additional_notes: verification.additional_notes || ''
+        region_town: verification.region_town || '',
+        date_received: verification.date_received || '',
+        date_closed: verification.date_closed || '',
+        processing_fee: verification.processing_fee || 0,
+        amount_paid: verification.amount_paid || 0,
+        payment_status: verification.payment_status || '',
+        expected_days: verification.expected_days || 5
       });
     } catch (error) {
-      console.error('Error fetching verification:', error);
-      toast.error('Failed to load document verification');
+      console.error('Error fetching document verification:', error);
+      toast.error('Failed to load document verification for editing');
       navigate('/document-verifications');
     } finally {
       setFetchLoading(false);
     }
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.agent_name || !formData.applicant_name || !formData.document_type || !formData.country) {
-      toast.error('Please fill in all required fields');
+    if (!formData.agent_name || !formData.applicant_name) {
+      toast.error('Agent name and applicant name are required');
       return;
     }
 
-    setLoading(true);
     try {
-      // Format data for submission
+      setLoading(true);
+      
+      // Prepare data for submission (remove empty strings and convert numbers)
       const submitData = {
         ...formData,
-        processing_fee: formData.processing_fee ? parseFloat(formData.processing_fee) : null,
-        turn_around_time: formData.turn_around_time ? parseInt(formData.turn_around_time) : null,
-        rush_order: formData.rush_order === true || formData.rush_order === 'true'
+        expected_days: parseInt(formData.expected_days) || 5,
+        processing_fee: parseFloat(formData.processing_fee) || 0,
+        amount_paid: parseFloat(formData.amount_paid) || 0,
+        // Convert empty strings to null for optional fields
+        date_received: formData.date_received || null,
+        date_closed: formData.date_closed || null,
+        ars_number: formData.ars_number || null,
+        check_id: formData.check_id || null,
+        document_type: formData.document_type || null,
+        country: formData.country || null,
+        region_town: formData.region_town || null,
+        payment_status: formData.payment_status || null
       };
 
-      const response = await apiService.documentVerifications.update(id, submitData);
-      toast.success('Document verification updated successfully!');
+      await apiService.documentVerifications.update(id, submitData);
+      toast.success('Document verification updated successfully');
       navigate('/document-verifications');
     } catch (error) {
       console.error('Error updating document verification:', error);
@@ -135,243 +142,241 @@ const EditDocumentVerification = () => {
 
   if (fetchLoading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p className="loading-text">Loading document verification...</p>
+      <div className="page-container">
+        <div className="loading-spinner">
+          <FaSpinner className="fa-spin" />
+          <p>Loading document verification...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="edit-document-verification">
+    <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Edit Document Verification</h1>
-        <p className="page-subtitle">Update document verification record</p>
+        <h2>Edit Document Verification</h2>
+        <p>Update the document verification information below</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="verification-form">
-        <div className="form-section">
-          <h3 className="section-title">Agent & Applicant Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label required">Agent Name</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter agent name"
-                value={formData.agent_name}
-                onChange={(e) => handleInputChange('agent_name', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label required">Applicant Name</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter applicant full name"
-                value={formData.applicant_name}
-                onChange={(e) => handleInputChange('applicant_name', e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Enter email address"
-                value={formData.email_address}
-                onChange={(e) => handleInputChange('email_address', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input
-                type="tel"
-                className="form-control"
-                placeholder="Enter phone number"
-                value={formData.phone_number}
-                onChange={(e) => handleInputChange('phone_number', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="form-container">
+        <form onSubmit={handleSubmit} className="verification-form">
+          <div className="form-grid">
+            {/* Basic Information */}
+            <div className="form-section">
+              <h3>Basic Information</h3>
+              
+              <div className="form-group">
+                <label htmlFor="agent_name">Agent Name *</label>
+                <input
+                  type="text"
+                  id="agent_name"
+                  name="agent_name"
+                  value={formData.agent_name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter agent name"
+                />
+              </div>
 
-        <div className="form-section">
-          <h3 className="section-title">Document Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label required">Document Type</label>
-              <select
-                className="form-control"
-                value={formData.document_type}
-                onChange={(e) => handleInputChange('document_type', e.target.value)}
-                required
-              >
-                <option value="">Select document type</option>
-                {documentTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+              <div className="form-group">
+                <label htmlFor="applicant_name">Applicant Name *</label>
+                <input
+                  type="text"
+                  id="applicant_name"
+                  name="applicant_name"
+                  value={formData.applicant_name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter applicant name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ars_number">ARS Number</label>
+                <input
+                  type="text"
+                  id="ars_number"
+                  name="ars_number"
+                  value={formData.ars_number}
+                  onChange={handleInputChange}
+                  placeholder="Enter ARS number"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="check_id">Check ID</label>
+                <input
+                  type="text"
+                  id="check_id"
+                  name="check_id"
+                  value={formData.check_id}
+                  onChange={handleInputChange}
+                  placeholder="Enter check ID"
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label required">Country</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter country of document origin"
-                value={formData.country}
-                onChange={(e) => handleInputChange('country', e.target.value)}
-                required
-              />
+
+            {/* Document Details */}
+            <div className="form-section">
+              <h3>Document Details</h3>
+              
+              <div className="form-group">
+                <label htmlFor="document_type">Document Type</label>
+                <select
+                  id="document_type"
+                  name="document_type"
+                  value={formData.document_type}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Document Type</option>
+                  {documentTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="country">Country</label>
+                <select
+                  id="country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Country</option>
+                  {countries.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="region_town">Region/Town</label>
+                <input
+                  type="text"
+                  id="region_town"
+                  name="region_town"
+                  value={formData.region_town}
+                  onChange={handleInputChange}
+                  placeholder="Enter region or town"
+                />
+              </div>
             </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Embassy Source</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter embassy or source authority"
-                value={formData.embassy_source}
-                onChange={(e) => handleInputChange('embassy_source', e.target.value)}
-              />
+
+            {/* Timeline */}
+            <div className="form-section">
+              <h3>Timeline</h3>
+              
+              <div className="form-group">
+                <label htmlFor="date_received">Date Received</label>
+                <input
+                  type="date"
+                  id="date_received"
+                  name="date_received"
+                  value={formData.date_received}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="date_closed">Date Closed</label>
+                <input
+                  type="date"
+                  id="date_closed"
+                  name="date_closed"
+                  value={formData.date_closed}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="expected_days">Expected Days</label>
+                <input
+                  type="number"
+                  id="expected_days"
+                  name="expected_days"
+                  value={formData.expected_days}
+                  onChange={handleInputChange}
+                  min="1"
+                  max="365"
+                  placeholder="Expected processing days"
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Language Version</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter document language"
-                value={formData.language_version}
-                onChange={(e) => handleInputChange('language_version', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Date Received</label>
-              <input
-                type="date"
-                className="form-control"
-                value={formData.date_received}
-                onChange={(e) => handleInputChange('date_received', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Rush Order</label>
-              <div className="checkbox-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.rush_order}
-                    onChange={(e) => handleInputChange('rush_order', e.target.checked)}
-                  />
-                  <span className="checkbox-text">This is a rush order</span>
-                </label>
+
+            {/* Financial Information */}
+            <div className="form-section">
+              <h3>Financial Information</h3>
+              
+              <div className="form-group">
+                <label htmlFor="processing_fee">Processing Fee</label>
+                <input
+                  type="number"
+                  id="processing_fee"
+                  name="processing_fee"
+                  value={formData.processing_fee}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="amount_paid">Amount Paid</label>
+                <input
+                  type="number"
+                  id="amount_paid"
+                  name="amount_paid"
+                  value={formData.amount_paid}
+                  onChange={handleInputChange}
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="payment_status">Payment Status</label>
+                <select
+                  id="payment_status"
+                  name="payment_status"
+                  value={formData.payment_status}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Payment Status</option>
+                  {paymentStatuses.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="form-section">
-          <h3 className="section-title">Processing Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Processing Fee ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                className="form-control"
-                placeholder="Enter processing fee"
-                value={formData.processing_fee}
-                onChange={(e) => handleInputChange('processing_fee', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Payment Status</label>
-              <select
-                className="form-control"
-                value={formData.payment_status}
-                onChange={(e) => handleInputChange('payment_status', e.target.value)}
-              >
-                {paymentStatuses.map(status => (
-                  <option key={status.value} value={status.value}>{status.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="form-actions">
+            <button 
+              type="button" 
+              onClick={handleCancel}
+              className="btn btn-secondary"
+              disabled={loading}
+            >
+              <FaTimes /> Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? <FaSpinner className="fa-spin" /> : <FaSave />}
+              {loading ? 'Updating...' : 'Update Verification'}
+            </button>
           </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Turnaround Time (days)</label>
-              <input
-                type="number"
-                min="0"
-                className="form-control"
-                placeholder="Enter expected turnaround time"
-                value={formData.turn_around_time}
-                onChange={(e) => handleInputChange('turn_around_time', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Processing Status</label>
-              <select
-                className="form-control"
-                value={formData.turn_around_status}
-                onChange={(e) => handleInputChange('turn_around_status', e.target.value)}
-              >
-                {turnAroundStatuses.map(status => (
-                  <option key={status.value} value={status.value}>{status.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        </form>
+      </div>
 
-        <div className="form-section">
-          <h3 className="section-title">Additional Information</h3>
-          <div className="form-group">
-            <label className="form-label">Additional Notes</label>
-            <textarea
-              className="form-control"
-              rows="4"
-              placeholder="Enter any additional notes or special requirements..."
-              value={formData.additional_notes}
-              onChange={(e) => handleInputChange('additional_notes', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-actions">
-          <button 
-            type="button" 
-            className="btn btn-secondary" 
-            onClick={handleCancel}
-            disabled={loading}
-          >
-            <FaTimes /> Cancel
-          </button>
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <FaSpinner className="spinning" /> Updating...
-              </>
-            ) : (
-              <>
-                <FaSave /> Update Verification
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+      <div className="info-note">
+        <p><strong>Note:</strong> Turnaround time and status are automatically calculated based on the dates and expected processing days.</p>
+      </div>
     </div>
   );
 };

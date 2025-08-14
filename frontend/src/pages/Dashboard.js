@@ -138,11 +138,11 @@ const Dashboard = () => {
           subtitle="Open cases and in-progress verifications"
         />
         <StatCard
-          title="Net Revenue"
-          value={`$${(dashboardData?.financial_overview?.net_revenue || 0).toLocaleString()}`}
+          title="Total Revenue"
+          value={`$${(dashboardData?.financial_overview?.total_revenue || 0).toLocaleString()}`}
           icon={<FaDollarSign />}
           color="success"
-          subtitle="Total processing fees minus agent payments"
+          subtitle="Processing fees + amount paid"
         />
       </div>
 
@@ -247,18 +247,18 @@ const Dashboard = () => {
               <FaUsers className="financial-icon text-primary" />
               <div>
                 <div className="financial-value">
-                  ${(dashboardData?.financial_overview?.total_agent_payments || 0).toLocaleString()}
+                  ${(dashboardData?.financial_overview?.total_amount_paid || 0).toLocaleString()}
                 </div>
-                <div className="financial-label">Agent Payments</div>
+                <div className="financial-label">Total Amount Paid</div>
               </div>
             </div>
             <div className="financial-stat">
               <FaChartLine className="financial-icon text-success" />
               <div>
                 <div className="financial-value">
-                  ${(dashboardData?.financial_overview?.net_revenue || 0).toLocaleString()}
+                  ${(dashboardData?.financial_overview?.total_revenue || 0).toLocaleString()}
                 </div>
-                <div className="financial-label">Net Revenue</div>
+                <div className="financial-label">Total Revenue</div>
               </div>
             </div>
           </div>

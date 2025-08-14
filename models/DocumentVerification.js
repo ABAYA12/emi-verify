@@ -4,16 +4,16 @@ class DocumentVerificationModel {
   static async create(verificationData) {
     const {
       agent_name, ars_number, check_id, applicant_name, document_type,
-      country, region_town, date_received, date_closed, turn_around_time,
-      turn_around_status, processing_fee, agent_amount_paid, total, payment_status
+      country, region_town, date_received, date_closed,
+      processing_fee, amount_paid, payment_status, expected_days
     } = verificationData;
 
     const query = `
       INSERT INTO document_verifications (
         agent_name, ars_number, check_id, applicant_name, document_type,
-        country, region_town, date_received, date_closed, turn_around_time,
-        turn_around_status, processing_fee, agent_amount_paid, total, payment_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        country, region_town, date_received, date_closed,
+        processing_fee, amount_paid, payment_status, expected_days
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
 
@@ -21,9 +21,8 @@ class DocumentVerificationModel {
       agent_name || null, ars_number || null, check_id || null,
       applicant_name || null, document_type || null, country || null,
       region_town || null, date_received || null, date_closed || null,
-      turn_around_time || null, turn_around_status || null,
-      processing_fee || null, agent_amount_paid || null, total || null,
-      payment_status || null
+      processing_fee || 0, amount_paid || 0, payment_status || null,
+      expected_days || 5
     ];
 
     const result = await db.query(query, values);
@@ -84,9 +83,23 @@ class DocumentVerificationModel {
   }
 
   static async update(id, updateData) {
-    const fields = Object.keys(updateData).filter(key => updateData[key] !== undefined);
+    // Filter out fields that shouldn't be manually updated (auto-calculated)
+    const filteredData = { ...updateData };
+    delete filteredData.turn_around_time; // Auto-calculated by trigger
+    delete filteredData.turn_around_status; // Auto-calculated by trigger
+    delete filteredData.id; // Don't update ID
+    delete filteredData.created_at; // Don't update creation timestamp
+    
+    const fields = Object.keys(filteredData).filter(key => 
+      filteredData[key] !== undefined && filteredData[key] !== null && filteredData[key] !== ''
+    );
+    
+    if (fields.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+    
     const setClause = fields.map((field, index) => `${field} = $${index + 2}`).join(', ');
-    const values = [id, ...fields.map(field => updateData[field])];
+    const values = [id, ...fields.map(field => filteredData[field])];
 
     const query = `
       UPDATE document_verifications 
@@ -265,8 +278,8 @@ class DocumentVerificationModel {
     return parseFloat(result.rows[0].total) || 0;
   }
 
-  static async getTotalAgentPayments(dateFilter = {}) {
-    let query = 'SELECT COALESCE(SUM(agent_amount_paid), 0) as total FROM document_verifications WHERE agent_amount_paid IS NOT NULL';
+  static async getTotalAmountPaid(dateFilter = {}) {
+    let query = 'SELECT COALESCE(SUM(amount_paid), 0) as total FROM document_verifications WHERE amount_paid IS NOT NULL';
     const values = [];
     let paramCounter = 1;
 
@@ -284,6 +297,35 @@ class DocumentVerificationModel {
 
     const result = await db.query(query, values);
     return parseFloat(result.rows[0].total) || 0;
+  }
+
+  static async getStatusBreakdown(dateFilter = {}) {
+    let query = `
+      SELECT 
+        turn_around_status as status,
+        COUNT(*) as count
+      FROM document_verifications 
+      WHERE turn_around_status IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY turn_around_status ORDER BY count DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
   }
 
   static async getOutstandingPayments(dateFilter = {}) {

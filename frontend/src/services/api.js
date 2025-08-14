@@ -47,6 +47,7 @@ export const apiService = {
       return api.get(`/api/insurance-cases?${params}`);
     },
     getById: (id) => api.get(`/api/insurance-cases/${id}`),
+    getForEdit: (id) => api.get(`/api/insurance-cases/${id}/edit`),
     create: (data) => api.post('/api/insurance-cases', data),
     update: (id, data) => api.put(`/api/insurance-cases/${id}`, data),
     delete: (id) => api.delete(`/api/insurance-cases/${id}`),
@@ -63,6 +64,7 @@ export const apiService = {
       return api.get(`/api/document-verifications?${params}`);
     },
     getById: (id) => api.get(`/api/document-verifications/${id}`),
+    getForEdit: (id) => api.get(`/api/document-verifications/${id}/edit`),
     create: (data) => api.post('/api/document-verifications', data),
     update: (id, data) => api.put(`/api/document-verifications/${id}`, data),
     delete: (id) => api.delete(`/api/document-verifications/${id}`),

@@ -30,6 +30,42 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get document verification by ID for editing (returns all fields for pre-filling)
+router.get('/:id/edit', async (req, res) => {
+  try {
+    const verification = await DocumentVerification.getById(req.params.id);
+    if (!verification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Document verification not found'
+      });
+    }
+    
+    // Format dates for frontend form inputs
+    const formattedVerification = {
+      ...verification,
+      date_received: verification.date_received ? verification.date_received.toISOString().split('T')[0] : '',
+      date_closed: verification.date_closed ? verification.date_closed.toISOString().split('T')[0] : '',
+      // Remove auto-calculated fields from edit data
+      turn_around_time: undefined,
+      turn_around_status: undefined
+    };
+    
+    res.json({
+      success: true,
+      data: formattedVerification,
+      message: 'Document verification loaded for editing'
+    });
+  } catch (error) {
+    console.error('Error fetching document verification for edit:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching document verification for editing',
+      error: error.message
+    });
+  }
+});
+
 // Get document verification by ID
 router.get('/:id', async (req, res) => {
   try {

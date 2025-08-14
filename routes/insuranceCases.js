@@ -29,6 +29,42 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get insurance case by ID for editing (returns all fields for pre-filling)
+router.get('/:id/edit', async (req, res) => {
+  try {
+    const caseRecord = await InsuranceCase.getById(req.params.id);
+    if (!caseRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Insurance case not found'
+      });
+    }
+    
+    // Format dates for frontend form inputs
+    const formattedCase = {
+      ...caseRecord,
+      date_received: caseRecord.date_received ? caseRecord.date_received.toISOString().split('T')[0] : '',
+      date_closed: caseRecord.date_closed ? caseRecord.date_closed.toISOString().split('T')[0] : '',
+      // Remove auto-calculated fields from edit data
+      turn_around_time: undefined,
+      case_status: undefined
+    };
+    
+    res.json({
+      success: true,
+      data: formattedCase,
+      message: 'Insurance case loaded for editing'
+    });
+  } catch (error) {
+    console.error('Error fetching insurance case for edit:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching insurance case for editing',
+      error: error.message
+    });
+  }
+});
+
 // Get insurance case by ID
 router.get('/:id', async (req, res) => {
   try {
