@@ -1,29 +1,28 @@
-/* Document Verifications Page - Modern Styling */
+/* Document Verifications Page (MANDATORY COLOR IMPLEMENTATION) */
 
-/* Base Layout */
+/* Base Layout (MANDATORY PROFESSIONAL STYLING) */
 .document-verifications {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--background-light);
   padding: 20px;
 }
 
 .add-document-verification,
 .edit-document-verification {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--background-light);
   padding: 20px;
 }
 
-/* Page Header */
+/* Page Header (MANDATORY PROFESSIONAL STYLING) */
 .page-header {
   text-align: center;
   margin-bottom: 40px;
-  padding: 30px 20px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  padding: 40px 30px;
+  background: linear-gradient(135deg, var(--primary-dark), #0f172a);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-primary);
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
@@ -33,16 +32,14 @@
 .page-title {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--pure-white);
   margin: 0 0 10px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .page-subtitle {
   font-size: 1.1rem;
-  color: #6b7280;
+  color: rgba(248, 250, 252, 0.8);
   margin: 0;
 }
 
@@ -58,12 +55,12 @@
 .filters-container {
   max-width: 1400px;
   margin: 0 auto 30px auto;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-surface-glass);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-border-glass);
   border-radius: 20px;
   padding: 30px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-glass);
 }
 
 .filters-row {
@@ -83,11 +80,11 @@
 .verification-form {
   max-width: 1400px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface-premium);
   backdrop-filter: blur(15px);
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-premium);
+  border: 1px solid var(--color-border-glass);
   padding: 40px;
   overflow: hidden;
   position: relative;
@@ -292,16 +289,15 @@ textarea.form-control {
   margin: 0;
 }
 
-/* Table Styles */
+/* Table Styles (FIXED VISIBILITY & LAYOUT) */
 .table-container {
   max-width: 1400px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  margin: 20px auto;
+  background-color: var(--pure-white);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -310,29 +306,32 @@ textarea.form-control {
   font-size: 14px;
 }
 
+/* FIXED: Clear Visible Headers */
 .table th {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 16px 12px;
+  background-color: var(--primary-dark);
+  color: var(--pure-white);
+  padding: 12px 16px;
   text-align: left;
   font-weight: 600;
-  border: none;
-  white-space: nowrap;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--primary-blue);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-  background: rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--pure-white);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
 .table tbody tr:hover td {
-  background: rgba(102, 126, 234, 0.05);
-  transform: scale(1.01);
+  background-color: var(--background-light);
 }
 
 /* Button Styles */

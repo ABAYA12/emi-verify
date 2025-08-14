@@ -16,19 +16,17 @@ function App() {
     <div className="App">
       <Navbar />
       <main className="main-content">
-        <div className="container">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/insurance-cases" element={<InsuranceCases />} />
-            <Route path="/insurance-cases/add" element={<AddInsuranceCase />} />
-            <Route path="/insurance-cases/edit/:id" element={<EditInsuranceCase />} />
-            <Route path="/document-verifications" element={<DocumentVerifications />} />
-            <Route path="/document-verifications/add" element={<AddDocumentVerification />} />
-            <Route path="/document-verifications/edit/:id" element={<EditDocumentVerification />} />
-            <Route path="/analytics" element={<Analytics />} />
-          </Routes>
-        </div>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/insurance-cases" element={<InsuranceCases />} />
+          <Route path="/insurance-cases/add" element={<AddInsuranceCase />} />
+          <Route path="/insurance-cases/edit/:id" element={<EditInsuranceCase />} />
+          <Route path="/document-verifications" element={<DocumentVerifications />} />
+          <Route path="/document-verifications/add" element={<AddDocumentVerification />} />
+          <Route path="/document-verifications/edit/:id" element={<EditDocumentVerification />} />
+          <Route path="/analytics" element={<Analytics />} />
+        </Routes>
       </main>
     </div>
   );
