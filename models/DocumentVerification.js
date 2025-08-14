@@ -389,6 +389,111 @@ class DocumentVerificationModel {
     const result = await db.query(query, values);
     return result.rows;
   }
+
+  // New KPI Methods
+  static async getVerificationsByDocumentType(dateFilter = {}) {
+    let query = `
+      SELECT 
+        document_type,
+        COUNT(*) as verification_count
+      FROM document_verifications 
+      WHERE document_type IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY document_type ORDER BY verification_count DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
+
+  static async getOnTimeVerifications(dateFilter = {}) {
+    let query = `
+      SELECT COUNT(*) as count
+      FROM document_verifications 
+      WHERE turn_around_status = 'Closed on time'
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    const result = await db.query(query, values);
+    return parseInt(result.rows[0].count) || 0;
+  }
+
+  static async getTotalProcessingFees(dateFilter = {}) {
+    let query = `
+      SELECT COALESCE(SUM(processing_fee), 0) as total_fees
+      FROM document_verifications 
+      WHERE processing_fee IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    const result = await db.query(query, values);
+    return parseFloat(result.rows[0].total_fees) || 0;
+  }
+
+  static async getTotalAgentPayments(dateFilter = {}) {
+    let query = `
+      SELECT COALESCE(SUM(amount_paid), 0) as total_agent_payments
+      FROM document_verifications 
+      WHERE amount_paid IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    const result = await db.query(query, values);
+    return parseFloat(result.rows[0].total_agent_payments) || 0;
+  }
 }
 
 module.exports = DocumentVerificationModel;

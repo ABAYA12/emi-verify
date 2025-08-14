@@ -17,56 +17,59 @@ router.get('/insurance-cases', async (req, res) => {
       closedCases,
       avgTurnaround,
       pendingCases,
+      onTimeCases,
       casesByCountry,
+      casesByType,
       fraudCases,
-      agentPerformance,
-      totalProcessingFees,
-      totalAmountPaid,
+      fraudCasesByType,
+      fraudCasesBySource,
+      fraudRateByCompany,
+      countryRiskAssessment,
       statusBreakdown
     ] = await Promise.all([
       InsuranceCase.getTotalCases(dateFilter),
       InsuranceCase.getClosedCases(dateFilter),
       InsuranceCase.getAverageTurnaroundTime(dateFilter),
       InsuranceCase.getPendingCases(dateFilter),
+      InsuranceCase.getOnTimeCases(dateFilter),
       InsuranceCase.getCasesByCountry(dateFilter),
+      InsuranceCase.getCasesByType(dateFilter),
       InsuranceCase.getFraudCases(dateFilter),
-      InsuranceCase.getAgentPerformance(dateFilter),
-      InsuranceCase.getTotalProcessingFees(dateFilter),
-      InsuranceCase.getTotalAmountPaid(dateFilter),
+      InsuranceCase.getFraudCasesByType(dateFilter),
+      InsuranceCase.getFraudCasesBySource(dateFilter),
+      InsuranceCase.getFraudRateByInsuranceCompany(dateFilter),
+      InsuranceCase.getCountryRiskAssessment(dateFilter),
       InsuranceCase.getStatusBreakdown(dateFilter)
     ]);
 
     // Calculate additional metrics
-    const closureRate = totalCases > 0 ? (closedCases / totalCases * 100).toFixed(2) : 0;
-    const fraudRate = totalCases > 0 ? (fraudCases / totalCases * 100).toFixed(2) : 0;
-    const totalRevenue = totalProcessingFees + totalAmountPaid; // Separate calculation
+    const onTimePercentage = totalCases > 0 ? (onTimeCases / totalCases * 100).toFixed(2) : 0;
+    const fraudPercentage = totalCases > 0 ? (fraudCases / totalCases * 100).toFixed(2) : 0;
 
     const kpis = {
-      overview: {
-        total_cases_received: totalCases,
-        total_cases_closed: closedCases,
-        pending_cases: pendingCases,
-        case_closure_rate: parseFloat(closureRate),
-        average_turnaround_time: Math.round(avgTurnaround * 100) / 100
-      },
-      financial_metrics: {
-        total_processing_fees: totalProcessingFees,
-        total_amount_paid: totalAmountPaid,
-        total_revenue: totalRevenue // Processing Fee + Amount Paid
-      },
-      fraud_analysis: {
-        total_fraud_cases: fraudCases,
-        fraud_rate_percentage: parseFloat(fraudRate),
-        non_fraud_cases: totalCases - fraudCases
-      },
-      status_breakdown: statusBreakdown,
-      geographical_distribution: casesByCountry,
-      agent_performance: agentPerformance.map(agent => ({
-        ...agent,
-        avg_turnaround: agent.avg_turnaround ? Math.round(agent.avg_turnaround * 100) / 100 : null,
-        closure_rate: agent.total_cases > 0 ? 
-          Math.round((agent.closed_cases / agent.total_cases * 100) * 100) / 100 : 0
-      }))
+      // Core KPIs
+      total_cases_received: totalCases,
+      total_cases_closed: closedCases,
+      average_turnaround_time: Math.round(avgTurnaround * 100) / 100,
+      percentage_cases_closed_on_time: parseFloat(onTimePercentage),
+      pending_cases: pendingCases,
+      
+      // Volume Analysis
+      case_volume_by_country: casesByCountry,
+      case_volume_by_case_type: casesByType,
+      
+      // Fraud Analysis
+      total_fraud_cases: fraudCases,
+      percentage_fraudulent_cases: parseFloat(fraudPercentage),
+      fraud_cases_by_type: fraudCasesByType,
+      fraud_cases_by_source: fraudCasesBySource,
+      fraud_rate_by_insurance_company: fraudRateByCompany,
+      
+      // Risk Assessment
+      country_risk_assessment: countryRiskAssessment,
+      
+      // Status Breakdown
+      status_breakdown: statusBreakdown
     };
 
     res.json({
@@ -99,52 +102,46 @@ router.get('/document-verifications', async (req, res) => {
       completedVerifications,
       avgTurnaround,
       pendingVerifications,
+      onTimeVerifications,
       verificationsByDocType,
       verificationsByCountry,
       totalProcessingFees,
       totalAgentPayments,
-      outstandingPayments,
-      agentPerformance,
-      statusBreakdown
+      agentPerformance
     ] = await Promise.all([
       DocumentVerification.getTotalVerifications(dateFilter),
       DocumentVerification.getCompletedVerifications(dateFilter),
       DocumentVerification.getAverageTurnaroundTime(dateFilter),
       DocumentVerification.getPendingVerifications(dateFilter),
+      DocumentVerification.getOnTimeVerifications(dateFilter),
       DocumentVerification.getVerificationsByDocumentType(dateFilter),
       DocumentVerification.getVerificationsByCountry(dateFilter),
       DocumentVerification.getTotalProcessingFees(dateFilter),
-      DocumentVerification.getTotalAmountPaid(dateFilter),
-      DocumentVerification.getOutstandingPayments(dateFilter),
-      DocumentVerification.getAgentPerformance(dateFilter),
-      DocumentVerification.getStatusBreakdown(dateFilter)
+      DocumentVerification.getTotalAgentPayments(dateFilter),
+      DocumentVerification.getAgentPerformance(dateFilter)
     ]);
 
     // Calculate additional metrics
-    const completionRate = totalVerifications > 0 ? 
-      (completedVerifications / totalVerifications * 100).toFixed(2) : 0;
-    const totalRevenue = totalProcessingFees + totalAgentPayments; // Processing Fee + Amount Paid
+    const onTimePercentage = totalVerifications > 0 ? 
+      (onTimeVerifications / totalVerifications * 100).toFixed(2) : 0;
 
     const kpis = {
-      overview: {
-        total_verifications_received: totalVerifications,
-        total_completed_verifications: completedVerifications,
-        pending_verifications: pendingVerifications,
-        completion_rate: parseFloat(completionRate),
-        average_turnaround_time: Math.round(avgTurnaround * 100) / 100
-      },
-      financial_metrics: {
-        total_processing_fees: totalProcessingFees,
-        total_amount_paid: totalAgentPayments,
-        total_revenue: totalRevenue, // Processing Fee + Amount Paid
-        outstanding_payments: {
-          count: outstandingPayments.count,
-          amount: outstandingPayments.amount
-        }
-      },
-      status_breakdown: statusBreakdown,
-      document_type_distribution: verificationsByDocType,
-      geographical_distribution: verificationsByCountry,
+      // Core KPIs
+      total_verifications_received: totalVerifications,
+      total_completed_verifications: completedVerifications,
+      average_turnaround_time: Math.round(avgTurnaround * 100) / 100,
+      percentage_on_time_verifications: parseFloat(onTimePercentage),
+      pending_verifications: pendingVerifications,
+      
+      // Volume Analysis
+      verification_volume_by_document_type: verificationsByDocType,
+      verification_volume_by_country_region: verificationsByCountry,
+      
+      // Financial Metrics
+      total_processing_fees_collected: totalProcessingFees,
+      total_agent_payments: totalAgentPayments,
+      
+      // Agent Performance
       agent_performance: agentPerformance.map(agent => ({
         ...agent,
         avg_turnaround: agent.avg_turnaround ? Math.round(agent.avg_turnaround * 100) / 100 : null,

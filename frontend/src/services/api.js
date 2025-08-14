@@ -80,6 +80,20 @@ export const apiService = {
       });
       return api.get(`/api/analytics/dashboard?${params}`);
     },
+    insuranceKPIs: (filters = {}) => {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+      return api.get(`/api/analytics/insurance-cases?${params}`);
+    },
+    documentKPIs: (filters = {}) => {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+      return api.get(`/api/analytics/document-verifications?${params}`);
+    },
     insuranceCases: (filters = {}) => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
@@ -93,6 +107,18 @@ export const apiService = {
         if (value) params.append(key, value);
       });
       return api.get(`/api/analytics/document-verifications?${params}`);
+    },
+    exportReport: (filters = {}) => {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+      return api.get(`/api/export/summary?${params}`, {
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+      });
     },
   },
 

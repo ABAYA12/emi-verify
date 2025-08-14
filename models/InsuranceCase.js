@@ -347,6 +347,190 @@ class InsuranceCaseModel {
     const result = await db.query(query, values);
     return result.rows;
   }
+
+  // New KPI Methods
+  static async getCasesByType(dateFilter = {}) {
+    let query = `
+      SELECT 
+        case_type,
+        COUNT(*) as case_count
+      FROM insurance_cases 
+      WHERE case_type IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY case_type ORDER BY case_count DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
+
+  static async getOnTimeCases(dateFilter = {}) {
+    let query = `
+      SELECT COUNT(*) as count
+      FROM insurance_cases 
+      WHERE case_status = 'Closed on time'
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    const result = await db.query(query, values);
+    return parseInt(result.rows[0].count) || 0;
+  }
+
+  static async getFraudCasesByType(dateFilter = {}) {
+    let query = `
+      SELECT 
+        fraud_type,
+        COUNT(*) as fraud_count
+      FROM insurance_cases 
+      WHERE is_fraud = true AND fraud_type IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY fraud_type ORDER BY fraud_count DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
+
+  static async getFraudCasesBySource(dateFilter = {}) {
+    let query = `
+      SELECT 
+        fraud_source,
+        COUNT(*) as fraud_count
+      FROM insurance_cases 
+      WHERE is_fraud = true AND fraud_source IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY fraud_source ORDER BY fraud_count DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
+
+  static async getFraudRateByInsuranceCompany(dateFilter = {}) {
+    let query = `
+      SELECT 
+        insurance_company,
+        COUNT(*) as total_cases,
+        COUNT(CASE WHEN is_fraud = true THEN 1 END) as fraud_cases,
+        CASE 
+          WHEN COUNT(*) > 0 THEN 
+            ROUND((COUNT(CASE WHEN is_fraud = true THEN 1 END)::DECIMAL / COUNT(*)) * 100, 2)
+          ELSE 0 
+        END as fraud_rate
+      FROM insurance_cases 
+      WHERE insurance_company IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY insurance_company ORDER BY fraud_rate DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
+
+  static async getCountryRiskAssessment(dateFilter = {}) {
+    let query = `
+      SELECT 
+        country,
+        COUNT(*) as total_cases,
+        COUNT(CASE WHEN is_fraud = true THEN 1 END) as fraud_cases,
+        CASE 
+          WHEN COUNT(*) > 0 THEN 
+            ROUND((COUNT(CASE WHEN is_fraud = true THEN 1 END)::DECIMAL / COUNT(*)) * 100, 2)
+          ELSE 0 
+        END as fraud_rate,
+        ROUND(AVG(turn_around_time), 2) as avg_turnaround
+      FROM insurance_cases 
+      WHERE country IS NOT NULL
+    `;
+    const values = [];
+    let paramCounter = 1;
+
+    if (dateFilter.start_date) {
+      query += ` AND date_received >= $${paramCounter}`;
+      values.push(dateFilter.start_date);
+      paramCounter++;
+    }
+
+    if (dateFilter.end_date) {
+      query += ` AND date_received <= $${paramCounter}`;
+      values.push(dateFilter.end_date);
+      paramCounter++;
+    }
+
+    query += ' GROUP BY country ORDER BY total_cases DESC';
+
+    const result = await db.query(query, values);
+    return result.rows;
+  }
 }
 
 module.exports = InsuranceCaseModel;
