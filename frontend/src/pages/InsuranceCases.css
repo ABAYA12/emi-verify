@@ -1,4 +1,62 @@
-/* Insurance Cases Page Styles (MANDATORY COLOR IMPLEMENTATION) */
+/* Insurance Cases Page Styles (MANDATORY COLOR.page-header p {
+  font-size: 1rem;
+  color: rgba(248, 250, 252, 0.8);
+  margin: 0;
+}
+
+/* Search Container */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--pure-white);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--text-primary);
+  min-width: 250px;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-btn, .clear-search-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  background-color: var(--primary-blue);
+  color: var(--pure-white);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-btn:hover {
+  background-color: var(--blue-dark);
+}
+
+.clear-search-btn {
+  background-color: var(--text-secondary);
+}
+
+.clear-search-btn:hover {
+  background-color: var(--text-primary);
+}
+
+/* Main Layout */
 .insurance-cases {
   padding: 0;
   background-color: var(--background-light);
@@ -20,7 +78,28 @@
   margin: 0;
 }
 
-/* Modern Form Styling (MANDATORY PROFESSIONAL COLORS) */
+/* Search Results - No Records Found */
+.no-records-found {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.no-records-icon {
+  font-size: 3rem;
+  color: var(--border-medium);
+  margin-bottom: 16px;
+}
+
+.no-records-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Mobile Responsive Design (FULL COMPATIBILITY) */
 .page-container {
   min-height: 100vh;
   background-color: var(--background-light);
@@ -479,7 +558,24 @@ table, .table {
   
   .table th,
   .table td {
-    padding: 12px 8px;
-    font-size: 13px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .search-input {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .search-btn, .clear-search-btn {
+    width: 100%;
+    justify-content: center;
   }
 }

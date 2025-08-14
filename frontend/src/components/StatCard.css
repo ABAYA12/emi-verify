@@ -1,66 +1,87 @@
-/* StatCard Component (MANDATORY COLOR IMPLEMENTATION) */
+/* StatCard Component (POLISHED PREMIUM DESIGN) */
 .stat-card {
-  background-color: var(--pure-white);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-  border-left: 4px solid;
+  background: linear-gradient(145deg, var(--pure-white), #fdfdfd);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(30, 41, 59, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 16px 16px 0 0;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(30, 41, 59, 0.15);
 }
 
-.stat-card-primary {
-  border-left-color: var(--primary-blue);
+.stat-card-primary::before {
+  background: linear-gradient(90deg, var(--primary-blue), #4f46e5);
 }
 
-.stat-card-success {
-  border-left-color: var(--success-green);
+.stat-card-success::before {
+  background: linear-gradient(90deg, var(--success-green), #059669);
 }
 
-.stat-card-warning {
-  border-left-color: var(--warning-amber);
+.stat-card-warning::before {
+  background: linear-gradient(90deg, var(--warning-amber), #d97706);
 }
 
-.stat-card-danger {
-  border-left-color: var(--error-red);
+.stat-card-danger::before {
+  background: linear-gradient(90deg, var(--error-red), #dc2626);
 }
 
 .stat-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card-icon {
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 24px;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .stat-card-primary .stat-card-icon {
-  background-color: var(--info-light);
+  background: linear-gradient(135deg, var(--info-light), rgba(59, 130, 246, 0.1));
   color: var(--primary-blue);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
 }
 
 .stat-card-success .stat-card-icon {
-  background-color: var(--success-light);
+  background: linear-gradient(135deg, var(--success-light), rgba(16, 185, 129, 0.1));
   color: var(--success-green);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
 }
 
 .stat-card-warning .stat-card-icon {
-  background-color: var(--warning-light);
+  background: linear-gradient(135deg, var(--warning-light), rgba(245, 158, 11, 0.1));
   color: var(--warning-amber);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
 }
 
 .stat-card-danger .stat-card-icon {
-  background-color: var(--error-light);
+  background: linear-gradient(135deg, var(--error-light), rgba(239, 68, 68, 0.1));
   color: var(--error-red);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
 }
 
 .stat-card-trend {
@@ -85,18 +106,24 @@
 }
 
 .stat-card-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 8px;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 12px;
   line-height: 1;
+  background: linear-gradient(135deg, var(--primary-dark), #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .stat-card-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 4px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-card-subtitle {

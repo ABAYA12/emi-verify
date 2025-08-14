@@ -147,80 +147,82 @@ const Dashboard = () => {
       </div>
 
       {/* Insurance Cases Overview */}
-      <div className="row">
-        <div className="col-6">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Insurance Cases</h3>
-            </div>
-            <div className="card-body">
-              <div className="mini-stats">
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.insurance_cases?.total || 0}</div>
-                  <div className="mini-stat-label">Total Cases</div>
-                </div>
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.insurance_cases?.closed || 0}</div>
-                  <div className="mini-stat-label">Closed</div>
-                </div>
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.insurance_cases?.pending || 0}</div>
-                  <div className="mini-stat-label">Pending</div>
-                </div>
-                <div className="mini-stat">
-                  <div className="mini-stat-value text-danger">{dashboardData?.insurance_cases?.fraud_cases || 0}</div>
-                  <div className="mini-stat-label">Fraud Cases</div>
-                </div>
+      <div className="overview-section">
+        <div className="overview-card">
+          <div className="card-header">
+            <h3 className="card-title">
+              <FaFileAlt style={{marginRight: '8px'}} />
+              Insurance Cases
+            </h3>
+          </div>
+          <div className="card-body">
+            <div className="mini-stats">
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.insurance_cases?.total || 0}</div>
+                <div className="mini-stat-label">Total Cases</div>
               </div>
-              
-              <div className="progress-section">
-                <div className="progress-label">
-                  <span>Fraud Rate</span>
-                  <span className="text-danger">{dashboardData?.insurance_cases?.fraud_rate || 0}%</span>
-                </div>
-                <div className="progress">
-                  <div 
-                    className="progress-bar bg-danger" 
-                    style={{ width: `${dashboardData?.insurance_cases?.fraud_rate || 0}%` }}
-                  ></div>
-                </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.insurance_cases?.closed || 0}</div>
+                <div className="mini-stat-label">Closed</div>
+              </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.insurance_cases?.pending || 0}</div>
+                <div className="mini-stat-label">Pending</div>
+              </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value text-danger">{dashboardData?.insurance_cases?.fraud_cases || 0}</div>
+                <div className="mini-stat-label">Fraud Cases</div>
+              </div>
+            </div>
+            
+            <div className="progress-section">
+              <div className="progress-label">
+                <span>Fraud Rate</span>
+                <span className="text-danger">{dashboardData?.insurance_cases?.fraud_rate || 0}%</span>
+              </div>
+              <div className="progress">
+                <div 
+                  className="progress-bar bg-danger" 
+                  style={{ width: `${dashboardData?.insurance_cases?.fraud_rate || 0}%` }}
+                ></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-6">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Document Verifications</h3>
-            </div>
-            <div className="card-body">
-              <div className="mini-stats">
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.document_verifications?.total || 0}</div>
-                  <div className="mini-stat-label">Total Verifications</div>
-                </div>
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.document_verifications?.completed || 0}</div>
-                  <div className="mini-stat-label">Completed</div>
-                </div>
-                <div className="mini-stat">
-                  <div className="mini-stat-value">{dashboardData?.document_verifications?.pending || 0}</div>
-                  <div className="mini-stat-label">Pending</div>
-                </div>
+        <div className="overview-card">
+          <div className="card-header">
+            <h3 className="card-title">
+              <FaClipboardCheck style={{marginRight: '8px'}} />
+              Document Verifications
+            </h3>
+          </div>
+          <div className="card-body">
+            <div className="mini-stats">
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.document_verifications?.total || 0}</div>
+                <div className="mini-stat-label">Total Verifications</div>
               </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.document_verifications?.completed || 0}</div>
+                <div className="mini-stat-label">Completed</div>
+              </div>
+              <div className="mini-stat">
+                <div className="mini-stat-value">{dashboardData?.document_verifications?.pending || 0}</div>
+                <div className="mini-stat-label">Pending</div>
+              </div>
+            </div>
 
-              <div className="progress-section">
-                <div className="progress-label">
-                  <span>Completion Rate</span>
-                  <span className="text-success">{dashboardData?.document_verifications?.completion_rate || 0}%</span>
-                </div>
-                <div className="progress">
-                  <div 
-                    className="progress-bar bg-success" 
-                    style={{ width: `${dashboardData?.document_verifications?.completion_rate || 0}%` }}
-                  ></div>
-                </div>
+            <div className="progress-section">
+              <div className="progress-label">
+                <span>Completion Rate</span>
+                <span className="text-success">{dashboardData?.document_verifications?.completion_rate || 0}%</span>
+              </div>
+              <div className="progress">
+                <div 
+                  className="progress-bar bg-success" 
+                  style={{ width: `${dashboardData?.document_verifications?.completion_rate || 0}%` }}
+                ></div>
               </div>
             </div>
           </div>

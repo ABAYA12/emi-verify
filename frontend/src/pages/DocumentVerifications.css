@@ -1,4 +1,68 @@
-/* Document Verifications Page (MANDATORY COLOR IMPLEMENTATION) */
+/* Document Verifications Page (MANDATO.page-subtitle {
+  font-size: 1rem;
+  color: rgba(248, 250, 252, 0.8);
+  margin: 0;
+}
+
+/* Search Container */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--pure-white);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--text-primary);
+  min-width: 250px;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-btn, .clear-search-btn {
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  background-color: var(--primary-blue);
+  color: var(--pure-white);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-btn:hover {
+  background-color: var(--blue-dark);
+}
+
+.clear-search-btn {
+  background-color: var(--text-secondary);
+}
+
+.clear-search-btn:hover {
+  background-color: var(--text-primary);
+}
+
+.page-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
 
 /* Base Layout (MANDATORY PROFESSIONAL STYLING) */
 .document-verifications {
@@ -680,6 +744,24 @@ textarea.form-control {
     justify-content: center;
   }
 
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+    width: 100%;
+  }
+
+  .search-input {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .search-btn, .clear-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .filters-row {
     grid-template-columns: 1fr;
   }
@@ -903,3 +985,24 @@ textarea.form-control {
 .table tbody tr:nth-child(3) { animation-delay: 0.2s; }
 .table tbody tr:nth-child(4) { animation-delay: 0.25s; }
 .table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+
+/* Search Results - No Records Found */
+.no-records-found {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.no-records-icon {
+  font-size: 3rem;
+  color: var(--border-medium);
+  margin-bottom: 16px;
+}
+
+.no-records-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}

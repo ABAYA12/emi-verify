@@ -17,6 +17,7 @@ const InsuranceCases = () => {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     start_date: '',
     end_date: '',
@@ -34,7 +35,11 @@ const InsuranceCases = () => {
   const fetchCases = async () => {
     try {
       setLoading(true);
-      const response = await apiService.insuranceCases.getAll(filters);
+      const searchFilters = { 
+        ...filters,
+        ...(searchTerm && { insured_name: searchTerm })
+      };
+      const response = await apiService.insuranceCases.getAll(searchFilters);
       setCases(response.data.data);
       setError(null);
     } catch (err) {
@@ -44,6 +49,34 @@ const InsuranceCases = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    fetchCases();
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    // Fetch cases without search term by temporarily clearing it
+    const fetchWithoutSearch = async () => {
+      setLoading(true);
+      try {
+        const searchFilters = {
+          ...filters,
+          // Don't include searchTerm when clearing
+        };
+        const response = await apiService.insuranceCases.getAll(searchFilters);
+        setCases(response.data.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching insurance cases:', err);
+        setError('Failed to load insurance cases');
+        toast.error('Failed to load insurance cases');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWithoutSearch();
   };
 
   const handleFilterChange = (field, value) => {
@@ -152,6 +185,24 @@ const InsuranceCases = () => {
           <p className="page-subtitle">Manage and track all insurance case records</p>
         </div>
         <div className="page-actions">
+          <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search by insured name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button className="btn btn-secondary search-btn" onClick={handleSearch}>
+              <FaSearch /> Search
+            </button>
+            {searchTerm && (
+              <button className="btn btn-secondary clear-search-btn" onClick={clearSearch}>
+                Clear
+              </button>
+            )}
+          </div>
           <button 
             className="btn btn-secondary" 
             onClick={() => setShowFilters(!showFilters)}
@@ -273,37 +324,55 @@ const InsuranceCases = () => {
               </tr>
             </thead>
             <tbody>
-              {cases.map((caseItem) => (
-                <tr key={caseItem.id}>
-                  <td>{caseItem.agent_name || '-'}</td>
-                  <td>{caseItem.insured_name || '-'}</td>
-                  <td>{caseItem.country || '-'}</td>
-                  <td>{formatDate(caseItem.date_received)}</td>
-                  <td>{getStatusBadge(caseItem.case_status)}</td>
-                  <td>{caseItem.case_type || '-'}</td>
-                  <td>{caseItem.insurance_company || '-'}</td>
-                  <td>{getFraudBadge(caseItem.is_fraud)}</td>
-                  <td>{caseItem.turn_around_time ? `${caseItem.turn_around_time} days` : '-'}</td>
-                  <td>
-                    <div className="table-actions">
-                      <Link 
-                        to={`/insurance-cases/edit/${caseItem.id}`}
-                        className="btn btn-sm btn-secondary"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </Link>
-                      <button 
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(caseItem.id)}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
+              {cases.length > 0 ? (
+                cases.map((caseItem) => (
+                  <tr key={caseItem.id}>
+                    <td>{caseItem.agent_name || '-'}</td>
+                    <td>{caseItem.insured_name || '-'}</td>
+                    <td>{caseItem.country || '-'}</td>
+                    <td>{formatDate(caseItem.date_received)}</td>
+                    <td>{getStatusBadge(caseItem.case_status)}</td>
+                    <td>{caseItem.case_type || '-'}</td>
+                    <td>{caseItem.insurance_company || '-'}</td>
+                    <td>{getFraudBadge(caseItem.is_fraud)}</td>
+                    <td>{caseItem.turn_around_time ? `${caseItem.turn_around_time} days` : '-'}</td>
+                    <td>
+                      <div className="table-actions">
+                        <Link 
+                          to={`/insurance-cases/edit/${caseItem.id}`}
+                          className="btn btn-sm btn-outline-primary"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </Link>
+                        <button 
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(caseItem.id)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="text-center py-4">
+                    <div className="no-records-found">
+                      <FaSearch className="no-records-icon" />
+                      <p className="no-records-text">
+                        {searchTerm ? `No insurance cases found for "${searchTerm}"` : 'No insurance cases found'}
+                      </p>
+                      {searchTerm && (
+                        <button className="btn btn-sm btn-primary" onClick={clearSearch}>
+                          Clear Search
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

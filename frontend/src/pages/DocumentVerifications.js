@@ -16,6 +16,7 @@ const DocumentVerifications = () => {
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     start_date: '',
     end_date: '',
@@ -33,7 +34,11 @@ const DocumentVerifications = () => {
   const fetchVerifications = async () => {
     try {
       setLoading(true);
-      const response = await apiService.documentVerifications.getAll(filters);
+      const searchFilters = { 
+        ...filters,
+        ...(searchTerm && { applicant_name: searchTerm })
+      };
+      const response = await apiService.documentVerifications.getAll(searchFilters);
       setVerifications(response.data.data);
       setError(null);
     } catch (err) {
@@ -43,6 +48,34 @@ const DocumentVerifications = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    fetchVerifications();
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    // Fetch verifications without search term by temporarily clearing it
+    const fetchWithoutSearch = async () => {
+      setLoading(true);
+      try {
+        const searchFilters = {
+          ...filters,
+          // Don't include searchTerm when clearing
+        };
+        const response = await apiService.documentVerifications.getAll(searchFilters);
+        setVerifications(response.data.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching document verifications:', err);
+        setError('Failed to load document verifications');
+        toast.error('Failed to load document verifications');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWithoutSearch();
   };
 
   const handleFilterChange = (field, value) => {
@@ -160,6 +193,24 @@ const DocumentVerifications = () => {
           <p className="page-subtitle">Manage and track all document verification records</p>
         </div>
         <div className="page-actions">
+          <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search by applicant name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button className="btn btn-secondary search-btn" onClick={handleSearch}>
+              <FaSearch /> Search
+            </button>
+            {searchTerm && (
+              <button className="btn btn-secondary clear-search-btn" onClick={clearSearch}>
+                Clear
+              </button>
+            )}
+          </div>
           <button 
             className="btn btn-secondary" 
             onClick={() => setShowFilters(!showFilters)}
@@ -296,37 +347,55 @@ const DocumentVerifications = () => {
               </tr>
             </thead>
             <tbody>
-              {verifications.map((verification) => (
-                <tr key={verification.id}>
-                  <td>{verification.agent_name || '-'}</td>
-                  <td>{verification.applicant_name || '-'}</td>
-                  <td>{verification.document_type || '-'}</td>
-                  <td>{verification.country || '-'}</td>
-                  <td>{formatDate(verification.date_received)}</td>
-                  <td>{getStatusBadge(verification.turn_around_status)}</td>
-                  <td>{formatCurrency(verification.processing_fee)}</td>
-                  <td>{getPaymentStatusBadge(verification.payment_status)}</td>
-                  <td>{verification.turn_around_time ? `${verification.turn_around_time} days` : '-'}</td>
-                  <td>
-                    <div className="table-actions">
-                      <Link 
-                        to={`/document-verifications/edit/${verification.id}`}
-                        className="btn btn-sm btn-secondary"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </Link>
-                      <button 
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(verification.id)}
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
+              {verifications.length > 0 ? (
+                verifications.map((verification) => (
+                  <tr key={verification.id}>
+                    <td>{verification.agent_name || '-'}</td>
+                    <td>{verification.applicant_name || '-'}</td>
+                    <td>{verification.document_type || '-'}</td>
+                    <td>{verification.country || '-'}</td>
+                    <td>{formatDate(verification.date_received)}</td>
+                    <td>{getStatusBadge(verification.turn_around_status)}</td>
+                    <td>{formatCurrency(verification.processing_fee)}</td>
+                    <td>{getPaymentStatusBadge(verification.payment_status)}</td>
+                    <td>{verification.turn_around_time ? `${verification.turn_around_time} days` : '-'}</td>
+                    <td>
+                      <div className="table-actions">
+                        <Link 
+                          to={`/document-verifications/edit/${verification.id}`}
+                          className="btn btn-sm btn-secondary"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </Link>
+                        <button 
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDelete(verification.id)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="text-center py-4">
+                    <div className="no-records-found">
+                      <FaSearch className="no-records-icon" />
+                      <p className="no-records-text">
+                        {searchTerm ? `No document verifications found for "${searchTerm}"` : 'No document verifications found'}
+                      </p>
+                      {searchTerm && (
+                        <button className="btn btn-sm btn-primary" onClick={clearSearch}>
+                          Clear Search
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
