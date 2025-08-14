@@ -9,6 +9,7 @@ const {
  * Register a new user
  */
 const register = async (req, res) => {
+  console.log('Registration request received:', req.body);
   try {
     const { username, password } = req.body;
 

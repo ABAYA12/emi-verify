@@ -85,11 +85,14 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+console.log('Loading API routes...');
 app.use('/api/auth', require('./routes/auth'));
+console.log('Auth routes loaded');
 app.use('/api/insurance-cases', require('./routes/insuranceCases'));
 app.use('/api/document-verifications', require('./routes/documentVerifications'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/export', require('./routes/export'));
+console.log('All API routes loaded');
 
 // Frontend Routes - Auth pages
 app.get('/login.html', (req, res) => {

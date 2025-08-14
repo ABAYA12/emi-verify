@@ -14,6 +14,7 @@ const { authenticateToken } = require('../middleware/auth');
  * @access  Public
  * @body    { username, password }
  */
+console.log('Setting up POST /register route');
 router.post('/register', authController.register);
 
 /**
@@ -22,6 +23,7 @@ router.post('/register', authController.register);
  * @access  Public
  * @body    { username, password }
  */
+console.log('Setting up POST /login route');
 router.post('/login', authController.login);
 
 /**
