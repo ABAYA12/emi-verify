@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Verify - Home</title>
+    <style>
+        :root {
+            /* Core Brand Colors - Maintain Consistency */
+            --primary-dark: #1e293b;     /* Slate Gray */
+            --primary-blue: #3b82f6;     /* Trust Blue */
+            --success-green: #10b981;    /* Success Green */
+            --warning-amber: #f59e0b;    /* Warning Amber */
+            --error-red: #ef4444;        /* Error Red */
+            --text-secondary: #64748b;   /* Slate Medium */
+            --border-light: #e2e8f0;     /* Slate Light */
+            --pure-white: #ffffff;       /* Pure White */
+            
+            /* Landing Page Enhancements */
+            --landing-bg: #f8fafc;           /* Soft background */
+            --landing-bg-secondary: #f1f5f9; /* Alternative section background */
+            --hero-gradient-start: #1e293b;  /* Hero gradient start */
+            --hero-gradient-end: #334155;    /* Hero gradient end */
+            --accent-blue-light: #dbeafe;    /* Light blue for highlights */
+            --accent-blue-dark: #1e40af;     /* Dark blue for emphasis */
+            
+            /* Hover states */
+            --primary-blue-hover: #2563eb;
+            --success-green-hover: #059669;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: var(--primary-dark);
+            background: linear-gradient(135deg, var(--landing-bg) 0%, var(--border-light) 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: var(--pure-white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .logo {
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            background: var(--landing-bg);
+            color: var(--primary-blue);
+        }
+
+        .nav-links a.active {
+            color: var(--primary-dark);
+        }
+        
+        .hero {
+            text-align: center;
+            color: var(--pure-white);
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 50%, var(--primary-blue) 100%);
+            border-radius: 12px;
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: var(--pure-white);
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 44px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-blue);
+            color: var(--pure-white);
+            border-color: var(--primary-blue);
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-blue-hover);
+            border-color: var(--primary-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--pure-white);
+            border: 2px solid var(--pure-white);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--pure-white);
+            color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+        
+        .service-card {
+            background: var(--pure-white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            color: var(--primary-dark);
+            transition: all 0.2s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        .service-card p {
+            color: var(--text-secondary);
+        }
+        
+        footer {
+            background: var(--primary-dark);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            border-radius: 12px;
+        }
+
+        .footer-brand {
+            color: var(--pure-white);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <div class="logo">EMI Verify</div>
+                <ul class="nav-links">
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/services">Services</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Get Started</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="hero">
+                <h1>Welcome to EMI Verify</h1>
+                <p>Professional Insurance Cases and Document Verification Management System</p>
+                <div class="cta-buttons">
+                    <a href="/register" class="btn btn-primary">Get Started</a>
+                    <a href="/about" class="btn btn-secondary">Learn More</a>
+                </div>
+            </section>
+            
+            <section class="services">
+                <div class="service-card">
+                    <h3>🔍 Document Verification</h3>
+                    <p>Comprehensive document verification system with real-time tracking and status updates. Ensure document authenticity and compliance.</p>
+                </div>
+                <div class="service-card">
+                    <h3>📋 Insurance Case Management</h3>
+                    <p>Streamlined insurance case management with detailed analytics, agent tracking, and automated workflow processes.</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 EMI Verify. This app was developed by InsightGrid Analytics.</p>
+        </footer>
+    </div>
+</body>
+</html>

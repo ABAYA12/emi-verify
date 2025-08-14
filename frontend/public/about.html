@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - EMI Verify</title>
+    <style>
+        :root {
+            /* Core Brand Colors - Maintain Consistency */
+            --primary-dark: #1e293b;     /* Slate Gray */
+            --primary-blue: #3b82f6;     /* Trust Blue */
+            --success-green: #10b981;    /* Success Green */
+            --warning-amber: #f59e0b;    /* Warning Amber */
+            --error-red: #ef4444;        /* Error Red */
+            --text-secondary: #64748b;   /* Slate Medium */
+            --border-light: #e2e8f0;     /* Slate Light */
+            --pure-white: #ffffff;       /* Pure White */
+            
+            /* Landing Page Enhancements */
+            --landing-bg: #f8fafc;           /* Soft background */
+            --landing-bg-secondary: #f1f5f9; /* Alternative section background */
+            --hero-gradient-start: #1e293b;  /* Hero gradient start */
+            --hero-gradient-end: #334155;    /* Hero gradient end */
+            --accent-blue-light: #dbeafe;    /* Light blue for highlights */
+            --accent-blue-dark: #1e40af;     /* Dark blue for emphasis */
+            
+            /* Hover states */
+            --primary-blue-hover: #2563eb;
+            --success-green-hover: #059669;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: var(--primary-dark);
+            background: linear-gradient(135deg, var(--landing-bg) 0%, var(--border-light) 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: var(--pure-white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .logo {
+            color: var(--primary-dark);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--landing-bg);
+            color: var(--primary-blue);
+        }
+
+        .nav-links a.active {
+            color: var(--primary-dark);
+        }
+        
+        .content {
+            background: var(--pure-white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 3rem;
+            border-radius: 12px;
+            color: var(--primary-dark);
+            margin-bottom: 2rem;
+        }
+        
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--primary-blue);
+            text-align: center;
+            font-weight: 700;
+        }
+        
+        .content h2 {
+            font-size: 1.8rem;
+            margin: 2rem 0 1rem 0;
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        
+        .content p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .feature {
+            background: var(--pure-white);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .feature h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .feature p {
+            color: var(--text-secondary);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .stat {
+            text-align: center;
+            background: var(--primary-dark);
+            color: var(--pure-white);
+            padding: 2rem;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: block;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 0.5rem;
+        }
+        
+        footer {
+            background: var(--primary-dark);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 2rem;
+            border-radius: 12px;
+        }
+
+        .footer-brand {
+            color: var(--pure-white);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .content h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <div class="logo">EMI Verify</div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about" class="active">About</a></li>
+                    <li><a href="/services">Services</a></li>
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Get Started</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main class="content">
+            <h1>About EMI Verify</h1>
+            
+            <p>EMI Verify is a comprehensive Insurance Cases and Document Verification Management System designed to streamline and enhance the verification processes for insurance professionals and organizations.</p>
+            
+            <h2>Our Mission</h2>
+            <p>To provide a reliable, secure, and efficient platform that simplifies document verification and insurance case management while maintaining the highest standards of security and compliance.</p>
+            
+            <h2>Key Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🔐 Secure Authentication</h3>
+                    <p>Username-based authentication with JWT tokens, bcrypt password hashing, and refresh token management for maximum security.</p>
+                </div>
+                <div class="feature">
+                    <h3>📊 Real-time Analytics</h3>
+                    <p>Comprehensive dashboard with real-time insights, KPIs, and detailed reporting for better decision making.</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ Fast Processing</h3>
+                    <p>Optimized database queries and efficient API endpoints ensure quick response times and smooth user experience.</p>
+                </div>
+                <div class="feature">
+                    <h3>📋 Case Management</h3>
+                    <p>Complete insurance case lifecycle management with status tracking, agent assignment, and automated workflows.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔍 Document Verification</h3>
+                    <p>Advanced document verification system with multiple verification types and comprehensive audit trails.</p>
+                </div>
+                <div class="feature">
+                    <h3>📈 Export & Reporting</h3>
+                    <p>Flexible export options including CSV format with customizable date ranges and filtering capabilities.</p>
+                </div>
+            </div>
+            
+            <h2>Platform Statistics</h2>
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">99.9%</span>
+                    <div class="stat-label">Uptime Reliability</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">256</span>
+                    <div class="stat-label">Bit Encryption</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <div class="stat-label">System Availability</div>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">100%</span>
+                    <div class="stat-label">Data Protection</div>
+                </div>
+            </div>
+            
+            <h2>Technology Stack</h2>
+            <p>EMI Verify is built using modern, robust technologies:</p>
+            <ul style="margin-left: 2rem; margin-bottom: 2rem;">
+                <li><strong>Backend:</strong> Node.js with Express.js framework</li>
+                <li><strong>Database:</strong> PostgreSQL with optimized indexing</li>
+                <li><strong>Authentication:</strong> JWT tokens with bcrypt password hashing</li>
+                <li><strong>Security:</strong> Helmet.js, rate limiting, and CORS protection</li>
+                <li><strong>Frontend:</strong> Modern HTML5, CSS3, and JavaScript</li>
+                <li><strong>Deployment:</strong> Docker containerization for scalability</li>
+            </ul>
+            
+            <h2>Compliance & Security</h2>
+            <p>We take security seriously. EMI Verify implements industry-standard security practices including:</p>
+            <ul style="margin-left: 2rem; margin-bottom: 2rem;">
+                <li>End-to-end encryption for all data transmission</li>
+                <li>Secure password storage with bcrypt hashing</li>
+                <li>JWT-based authentication with automatic token refresh</li>
+                <li>Rate limiting to prevent abuse and DDoS attacks</li>
+                <li>Comprehensive audit logging for all system activities</li>
+                <li>Regular security updates and vulnerability assessments</li>
+            </ul>
+            
+            <h2>Support & Development</h2>
+            <p>EMI Verify is continuously evolving with regular updates, new features, and performance improvements. Our development team is committed to providing the best possible experience for our users.</p>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 EMI Verify. This app was developed by InsightGrid Analytics.</p>
+        </footer>
+    </div>
+</body>
+</html>

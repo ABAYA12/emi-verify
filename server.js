@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
@@ -34,8 +35,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Root endpoint - Landing page
-app.get('/', (req, res) => {
+// Cookie parsing middleware
+app.use(cookieParser());
+
+// Serve static files from frontend public (auth pages)
+app.use(express.static('frontend/public'));
+
+// Serve React build for main application
+app.use('/app', express.static('frontend/build'));
+
+// API Root endpoint
+app.get('/api', (req, res) => {
   res.json({
     success: true,
     message: 'Welcome to EMI Verify API',
@@ -46,16 +56,19 @@ app.get('/', (req, res) => {
     quick_links: {
       health_check: '/health',
       api_documentation: '/api',
+      authentication: '/api/auth',
       dashboard_analytics: '/api/analytics/dashboard',
       insurance_cases: '/api/insurance-cases',
       document_verifications: '/api/document-verifications'
     },
     getting_started: {
-      '1_view_sample_data': 'GET /api/analytics/dashboard',
-      '2_list_insurance_cases': 'GET /api/insurance-cases',
-      '3_list_document_verifications': 'GET /api/document-verifications',
-      '4_export_to_csv': 'GET /api/export/insurance-cases',
-      '5_full_documentation': 'GET /api'
+      '1_register_user': 'POST /api/auth/register',
+      '2_login_user': 'POST /api/auth/login',
+      '3_view_sample_data': 'GET /api/analytics/dashboard',
+      '4_list_insurance_cases': 'GET /api/insurance-cases',
+      '5_list_document_verifications': 'GET /api/document-verifications',
+      '6_export_to_csv': 'GET /api/export/insurance-cases',
+      '7_full_documentation': 'GET /api'
     }
   });
 });
@@ -72,10 +85,109 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/insurance-cases', require('./routes/insuranceCases'));
 app.use('/api/document-verifications', require('./routes/documentVerifications'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/export', require('./routes/export'));
+
+// Frontend Routes - Auth pages
+app.get('/login.html', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/login.html');
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/login.html');
+});
+
+app.get('/register.html', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/register.html');
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/register.html');
+});
+
+app.get('/about.html', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/about.html');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/about.html');
+});
+
+app.get('/services.html', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/services.html');
+});
+
+app.get('/services', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/services.html');
+});
+
+// Authentication middleware for protected routes
+const requireAuth = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1] || req.cookies.token;
+  
+  if (!token) {
+    return res.redirect('/login');
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.redirect('/login');
+  }
+};
+
+// Main app routes - serve React application (PROTECTED)
+app.get('/dashboard*', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+app.get('/insurance-cases*', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+app.get('/document-verifications*', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+app.get('/analytics*', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+app.get('/app*', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+// Home page (landing page)
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/landing.html');
+});
+
+// Alternative home route - redirect to root
+app.get('/home', (req, res) => {
+  res.redirect('/');
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/login.html');
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/register.html');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/about.html');
+});
+
+app.get('/services', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/services.html');
+});
 
 // API Documentation endpoint
 app.get('/api', (req, res) => {
@@ -86,6 +198,15 @@ app.get('/api', (req, res) => {
     description: 'Insurance Cases and Document Verification Management System',
     endpoints: {
       health: 'GET /health',
+      authentication: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        change_password: 'POST /api/auth/change-password',
+        refresh_token: 'POST /api/auth/refresh-token',
+        logout: 'POST /api/auth/logout',
+        profile: 'GET /api/auth/profile',
+        verify: 'GET /api/auth/verify'
+      },
       insurance_cases: {
         list: 'GET /api/insurance-cases',
         create: 'POST /api/insurance-cases',
