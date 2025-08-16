@@ -1,7 +1,31 @@
 # EMI Verify
 **Insurance Cases and Document Verification Management System**
 
-A comprehensive Node.js + PostgreSQL backend system for managing Insurance Cases and Document Verification records with advanced analytics and CSV export capabilities.
+A comprehensive full-stack application for managing Insurance Cases and Document Verification records with advanced analytics and CSV export capabilities.
+
+## 🏗️ Project Structure
+
+```
+emi-verify/
+├── backend/                    # Node.js + Express API server
+│   ├── config/                # Database configuration
+│   ├── controllers/           # API controllers
+│   ├── middleware/            # Authentication & validation
+│   ├── models/               # Database models
+│   ├── routes/               # API routes
+│   ├── scripts/              # Database setup & migration scripts
+│   ├── tests/                # Backend tests
+│   ├── utils/                # Utility functions
+│   ├── server.js             # Main server file
+│   └── package.json          # Backend dependencies
+├── frontend/                  # React.js frontend application
+│   ├── public/               # Static assets
+│   ├── src/                  # React components & pages
+│   └── package.json          # Frontend dependencies
+├── docker-compose.yml        # PostgreSQL & PgAdmin containers
+├── package.json             # Workspace management
+└── quick-start.sh           # Automated setup script
+```
 
 ## 🚀 Features
 
@@ -47,40 +71,113 @@ A comprehensive Node.js + PostgreSQL backend system for managing Insurance Cases
 - Date Received, Date Closed, Turnaround Time
 - Processing Fees, Agent Payments, Payment Status
 
-## 🛠 Setup Instructions
+## 🛠 Quick Start
 
-### Prerequisites
+### Option 1: Automated Setup (Recommended)
+```bash
+# Clone and navigate to the project
+cd /home/ubuntu/emi-verify
+
+# Run the automated setup script
+./quick-start.sh
+```
+
+This script will:
+- Start PostgreSQL with Docker
+- Install backend and frontend dependencies
+- Set up the database and sample data
+- Provide instructions for starting the applications
+
+### Option 2: Manual Setup
+
+#### Prerequisites
 - Node.js (v14 or higher)
-- PostgreSQL (v12 or higher)
+- Docker & Docker Compose (for database)
 - npm or yarn
 
-### Installation
+#### Installation Steps
 
-1. **Clone and Install Dependencies**
+1. **Start Database Services**
    ```bash
-   cd /home/ubuntu/emi-verify
+   docker-compose up -d postgres
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   # Install workspace dependencies
    npm install
+   
+   # Or install individually
+   npm run install:backend
+   npm run install:frontend
    ```
 
-2. **Configure Environment**
+3. **Configure Backend Environment**
    ```bash
-   cp .env.example .env
-   # Edit .env file with your database credentials
+   cp .env.example backend/.env
+   # Edit backend/.env file if needed (default values work with Docker)
    ```
 
-3. **Set up Database**
+4. **Set up Database**
    ```bash
    npm run setup-db
+   npm run sample-data
    ```
 
-4. **Start the Server**
+5. **Start Applications**
    ```bash
-   # Development mode
-   npm run dev
+   # Terminal 1: Start backend
+   npm run dev:backend
    
-   # Production mode
-   npm start
+   # Terminal 2: Start frontend
+   npm run dev:frontend
    ```
+
+## 🚀 Available Scripts
+
+### Workspace Level
+- `npm run install:all` - Install all dependencies
+- `npm run start:backend` - Start backend in production mode
+- `npm run start:frontend` - Start frontend development server
+- `npm run dev:backend` - Start backend in development mode
+- `npm run setup-db` - Initialize database
+- `npm run sample-data` - Generate sample data
+- `npm run test:backend` - Run backend tests
+
+### Individual Services
+```bash
+# Backend (from ./backend/)
+npm start          # Production mode
+npm run dev        # Development mode with nodemon
+npm test           # Run all tests
+npm run setup-db   # Database setup
+
+# Frontend (from ./frontend/)
+npm start          # Development server
+npm run build      # Production build
+```
+
+## 🌐 Access Information
+
+Once both applications are running:
+
+### Applications
+- **Frontend**: http://localhost:3001 (React development server)
+- **Backend API**: http://localhost:3000 (Express server)
+
+### Database Management
+- **PostgreSQL**: localhost:5432
+  - Database: `emi_verify`
+  - User: `emi_admin`
+  - Password: `emi_password123`
+- **PgAdmin**: http://localhost:8080
+  - Email: `admin@emi.com`
+  - Password: `pgadmin123`
+
+### Health Check
+```bash
+curl http://localhost:3000/health
+```
 
 ## 📡 API Endpoints
 

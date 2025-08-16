@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "setup-db": "node scripts/setup-database.js",
     "migrate-users": "node scripts/migrate-users-table.js",
+    "migrate-email": "node scripts/migrate-email-verification.js",
     "sample-data": "node scripts/generate-sample-data.js",
     "quick-start": "./quick-start.sh",
     "test": "jest",
@@ -35,6 +36,7 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.8",
     "pg": "^8.11.3",
     "uuid": "^11.1.0"
   },
