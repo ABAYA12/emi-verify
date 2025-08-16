@@ -3,6 +3,13 @@
 echo "🧪 EMI Verify - Testing All Implemented Features"
 echo "================================================"
 
+# Check if backend is running
+if ! curl -s http://localhost:3000/health > /dev/null; then
+    echo "❌ Backend server is not running. Please start it first:"
+    echo "   cd backend && npm start"
+    exit 1
+fi
+
 BASE_URL="http://localhost:3000"
 
 echo "✅ 1. Testing Health Check"

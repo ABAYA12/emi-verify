@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # EMI Verify Quick Start Script with Docker
-echo "🚀 EMI Verify Quick Start with Docker"
+echo "🚀 EMI Verify Quiecho "🚀 To start the EMI Verify server:"
+echo "   cd backend && npm start              # Production mode"
+echo "   cd backend && npm run dev            # Development mode"
+echo ""
+echo "🚀 To start the frontend:"
+echo "   cd frontend && npm start             # Development mode"Start with Docker"
 echo "===================================="
 
 # Check if Docker is running
@@ -47,12 +52,13 @@ done
 echo "✅ Database is ready!"
 
 # Create .env file if it doesn't exist
-if [ ! -f .env ]; then
-    echo "📝 Creating .env file..."
-    cp .env.example .env
+if [ ! -f backend/.env ]; then
+    echo "📝 Creating backend .env file..."
+    cp .env.example backend/.env
 fi
 
-echo "📦 Installing dependencies..."
+echo "📦 Installing backend dependencies..."
+cd backend
 npm install
 
 echo "🗃️  Setting up database..."
@@ -60,6 +66,12 @@ npm run setup-db
 
 echo "🎯 Generating sample data..."
 node scripts/generate-sample-data.js
+
+echo "📦 Installing frontend dependencies..."
+cd ../frontend
+npm install
+
+cd ..
 
 echo ""
 echo "🎉 EMI Verify is ready!"
