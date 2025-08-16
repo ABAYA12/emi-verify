@@ -1,7 +1,7 @@
 const db = require('../config/database');
 
 const migrateEmailVerification = async () => {
-  const client = await db.getClient();
+  const client = await db.pool.connect();
   
   try {
     await client.query('BEGIN');

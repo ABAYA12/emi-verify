@@ -38,11 +38,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Cookie parsing middleware
 app.use(cookieParser());
 
-// Serve static files from frontend public (auth pages)
-app.use(express.static('frontend/public'));
-
-// Serve React build for main application
-app.use('/app', express.static('frontend/build'));
+// Static file serving commented out for now - frontend is separate
+// app.use(express.static('frontend/public'));
+// app.use('/app', express.static('frontend/build'));
 
 // API Root endpoint
 app.get('/api', (req, res) => {
@@ -94,7 +92,8 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/export', require('./routes/export'));
 console.log('All API routes loaded');
 
-// Frontend Routes - Auth pages
+// Frontend Routes - Auth pages (commented out - using React app)
+/*
 app.get('/login.html', (req, res) => {
   res.sendFile(__dirname + '/frontend/public/login.html');
 });
@@ -126,6 +125,7 @@ app.get('/services.html', (req, res) => {
 app.get('/services', (req, res) => {
   res.sendFile(__dirname + '/frontend/public/services.html');
 });
+*/
 
 // Authentication middleware for protected routes
 const requireAuth = (req, res, next) => {
@@ -162,8 +162,51 @@ app.get('/analytics*', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/frontend/build/index.html');
 });
 
+// Frontend routes commented out - using separate React app
+/*
+app.get('/app', requireAuth, (req, res) => {
+  res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
 app.get('/app*', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/frontend/build/index.html');
+});
+
+// Home page (landing page)
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/landing.html');
+});
+
+// Alternative home route - redirect to root
+app.get('/home', (req, res) => {
+  res.redirect('/');
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/login.html');
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/register.html');
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/about.html');
+});
+
+app.get('/services', (req, res) => {
+  res.sendFile(__dirname + '/frontend/public/services.html');
+});
+*/
+
+// Simple root endpoint for API-only mode
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'EMI Verify API Server',
+    version: '1.0.0',
+    frontend: 'http://localhost:3001'
+  });
 });
 
 // Home page (landing page)

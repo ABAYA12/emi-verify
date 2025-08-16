@@ -156,6 +156,25 @@ export const apiService = {
       return api.get(`/api/export/summary?${params}`);
     },
   },
+
+  // Authentication
+  auth: {
+    // New email-based authentication
+    signup: (data) => api.post('/api/auth/signup', data),
+    verifyEmail: (data) => api.post('/api/auth/verify-email', data),
+    resendVerification: (data) => api.post('/api/auth/resend-verification', data),
+    login: (data) => api.post('/api/auth/login', data),
+    forgotPassword: (data) => api.post('/api/auth/forgot-password', data),
+    resetPassword: (data) => api.post('/api/auth/reset-password', data),
+    
+    // Legacy authentication
+    register: (data) => api.post('/api/auth/register', data),
+    
+    // Common authentication
+    refreshToken: (data) => api.post('/api/auth/refresh-token', data),
+    logout: () => api.post('/api/auth/logout'),
+    getProfile: () => api.get('/api/auth/profile'),
+  },
 };
 
 export default api;

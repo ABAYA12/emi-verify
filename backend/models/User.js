@@ -1,217 +1,303 @@
-const db = require('../config/database');
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const db = require('../config/database');
 
 class User {
-  constructor(userData) {
-    this.id = userData.id;
-    this.username = userData.username;
-    this.password = userData.password;
-    this.refresh_token = userData.refresh_token;
-    this.created_at = userData.created_at;
-    this.updated_at = userData.updated_at;
-  }
+  /**
+   * Create a new user with email verification
+   */
+  static async createWithEmail({ fullName, email, password }) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Invalid email format');
+    }
 
-  // Create a new user
-  static async create({ username, password }) {
+    // Check if user already exists
+    const existingUser = await this.findByEmail(email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insert user into database
+    const query = `
+      INSERT INTO users (full_name, email, password, verified, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, full_name, email, verified, created_at
+    `;
+    
+    const now = new Date();
+    const values = [fullName, email.toLowerCase(), hashedPassword, false, now, now];
+    
     try {
-      // Validate input
-      if (!username || !password) {
-        throw new Error('Username and password are required');
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, values);
+        return result.rows[0];
+      } finally {
+        client.release();
       }
-
-      // Validate username format
-      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-        throw new Error('Username can only contain letters, numbers, underscores, and hyphens');
-      }
-
-      if (username.length < 3 || username.length > 30) {
-        throw new Error('Username must be between 3 and 30 characters');
-      }
-
-      // Validate password length
-      if (password.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-      }
-
-      // Check if username already exists
-      const existingUser = await this.findByUsername(username);
-      if (existingUser) {
-        throw new Error('Username already exists');
-      }
-
-      // Hash password
-      const saltRounds = 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      // Insert user into database
-      const userId = uuidv4();
-      const query = `
-        INSERT INTO users (id, username, password)
-        VALUES ($1, $2, $3)
-        RETURNING id, username, created_at, updated_at
-      `;
-      
-      const result = await db.query(query, [userId, username, hashedPassword]);
-      return new User(result.rows[0]);
     } catch (error) {
-      throw error;
+      if (error.code === '23505') { // Unique violation
+        throw new Error('User with this email already exists');
+      }
+      throw new Error('Failed to create user: ' + error.message);
     }
   }
 
-  // Find user by username
-  static async findByUsername(username) {
+  /**
+   * Find user by email
+   */
+  static async findByEmail(email) {
+    const query = 'SELECT * FROM users WHERE email = $1';
+    
     try {
-      const query = 'SELECT * FROM users WHERE username = $1';
-      const result = await db.query(query, [username]);
-      
-      if (result.rows.length === 0) {
-        return null;
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [email.toLowerCase()]);
+        return result.rows[0] || null;
+      } finally {
+        client.release();
       }
-      
-      return new User(result.rows[0]);
     } catch (error) {
-      throw error;
+      throw new Error('Failed to find user: ' + error.message);
     }
   }
 
-  // Find user by ID
+  /**
+   * Find user by ID
+   */
   static async findById(id) {
+    const query = 'SELECT * FROM users WHERE id = $1';
+    
     try {
-      const query = 'SELECT * FROM users WHERE id = $1';
-      const result = await db.query(query, [id]);
-      
-      if (result.rows.length === 0) {
-        return null;
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [id]);
+        return result.rows[0] || null;
+      } finally {
+        client.release();
       }
-      
-      return new User(result.rows[0]);
     } catch (error) {
-      throw error;
+      throw new Error('Failed to find user: ' + error.message);
     }
   }
 
-  // Find user by refresh token
-  static async findByRefreshToken(refreshToken) {
+  /**
+   * Verify password
+   */
+  static async verifyPassword(plainPassword, hashedPassword) {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  }
+
+  /**
+   * Create verification code
+   */
+  static async createVerificationCode(email) {
+    const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+    
+    const query = `
+      INSERT INTO verification_codes (email, code, expires_at, created_at)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        code = EXCLUDED.code,
+        expires_at = EXCLUDED.expires_at,
+        created_at = EXCLUDED.created_at,
+        used = false
+      RETURNING *
+    `;
+    
     try {
-      const query = 'SELECT * FROM users WHERE refresh_token = $1';
-      const result = await db.query(query, [refreshToken]);
-      
-      if (result.rows.length === 0) {
-        return null;
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [email.toLowerCase(), code, expiresAt, new Date()]);
+        return result.rows[0];
+      } finally {
+        client.release();
       }
-      
-      return new User(result.rows[0]);
     } catch (error) {
-      throw error;
+      throw new Error('Failed to create verification code: ' + error.message);
     }
   }
 
-  // Verify password
-  async verifyPassword(password) {
+  /**
+   * Verify email with code
+   */
+  static async verifyCode(email, code) {
+    const client = await db.pool.connect();
+    
     try {
-      return await bcrypt.compare(password, this.password);
+      await client.query('BEGIN');
+      
+      // Check verification code
+      const codeQuery = `
+        SELECT * FROM verification_codes 
+        WHERE email = $1 AND code = $2 AND expires_at > NOW() AND used = false
+      `;
+      const codeResult = await client.query(codeQuery, [email.toLowerCase(), code]);
+      
+      if (codeResult.rows.length === 0) {
+        throw new Error('Invalid or expired verification code');
+      }
+      
+      // Mark code as used
+      const markUsedQuery = `
+        UPDATE verification_codes 
+        SET used = true 
+        WHERE email = $1 AND code = $2
+      `;
+      await client.query(markUsedQuery, [email.toLowerCase(), code]);
+      
+      // Update user verification status
+      const updateUserQuery = `
+        UPDATE users 
+        SET verified = true, updated_at = NOW() 
+        WHERE email = $1
+        RETURNING id, full_name, email, verified, created_at
+      `;
+      const userResult = await client.query(updateUserQuery, [email.toLowerCase()]);
+      
+      if (userResult.rows.length === 0) {
+        throw new Error('User not found');
+      }
+      
+      await client.query('COMMIT');
+      return userResult.rows[0];
+      
     } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
+    } finally {
+      client.release();
     }
   }
 
-  // Update password
-  async updatePassword(newPassword) {
-    try {
-      // Validate password length
-      if (newPassword.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-      }
+  /**
+   * Create password reset token
+   */
+  static async createPasswordResetToken(email) {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
+    // Generate reset token
+    const token = require('crypto').randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+    
+    const query = `
+      INSERT INTO password_resets (email, token, expires_at, created_at)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        token = EXCLUDED.token,
+        expires_at = EXCLUDED.expires_at,
+        created_at = EXCLUDED.created_at,
+        used = false
+      RETURNING *
+    `;
+    
+    try {
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [email.toLowerCase(), token, expiresAt, new Date()]);
+        return result.rows[0];
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      throw new Error('Failed to create password reset token: ' + error.message);
+    }
+  }
+
+  /**
+   * Reset password with token
+   */
+  static async resetPasswordWithToken(token, newPassword) {
+    const client = await db.pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Check reset token
+      const tokenQuery = `
+        SELECT * FROM password_resets 
+        WHERE token = $1 AND expires_at > NOW() AND used = false
+      `;
+      const tokenResult = await client.query(tokenQuery, [token]);
+      
+      if (tokenResult.rows.length === 0) {
+        throw new Error('Invalid or expired reset token');
+      }
+      
+      const resetRecord = tokenResult.rows[0];
+      
       // Hash new password
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-      // Update in database
-      const query = `
+      
+      // Update user password
+      const updateUserQuery = `
         UPDATE users 
-        SET password = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-        RETURNING id, username, updated_at
+        SET password = $1, updated_at = NOW() 
+        WHERE email = $2
+        RETURNING id, full_name, email, verified, created_at
       `;
+      const userResult = await client.query(updateUserQuery, [hashedPassword, resetRecord.email]);
       
-      const result = await db.query(query, [hashedPassword, this.id]);
-      
-      if (result.rows.length === 0) {
+      if (userResult.rows.length === 0) {
         throw new Error('User not found');
       }
-
-      // Update instance
-      this.password = hashedPassword;
-      this.updated_at = result.rows[0].updated_at;
-
-      return true;
+      
+      // Mark token as used
+      const markUsedQuery = `
+        UPDATE password_resets 
+        SET used = true 
+        WHERE token = $1
+      `;
+      await client.query(markUsedQuery, [token]);
+      
+      await client.query('COMMIT');
+      return userResult.rows[0];
+      
     } catch (error) {
+      await client.query('ROLLBACK');
       throw error;
+    } finally {
+      client.release();
     }
   }
 
-  // Update refresh token
-  async updateRefreshToken(refreshToken) {
+  /**
+   * Update user profile
+   */
+  static async updateProfile(userId, { fullName }) {
+    const query = `
+      UPDATE users 
+      SET full_name = $1, updated_at = NOW() 
+      WHERE id = $2
+      RETURNING id, full_name, email, verified, created_at
+    `;
+    
     try {
-      const query = `
-        UPDATE users 
-        SET refresh_token = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-        RETURNING updated_at
-      `;
-      
-      const result = await db.query(query, [refreshToken, this.id]);
-      
-      if (result.rows.length === 0) {
-        throw new Error('User not found');
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [fullName, userId]);
+        if (result.rows.length === 0) {
+          throw new Error('User not found');
+        }
+        return result.rows[0];
+      } finally {
+        client.release();
       }
-
-      // Update instance
-      this.refresh_token = refreshToken;
-      this.updated_at = result.rows[0].updated_at;
-
-      return true;
     } catch (error) {
-      throw error;
+      throw new Error('Failed to update profile: ' + error.message);
     }
-  }
-
-  // Remove refresh token (logout)
-  async removeRefreshToken() {
-    try {
-      const query = `
-        UPDATE users 
-        SET refresh_token = NULL, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-        RETURNING updated_at
-      `;
-      
-      const result = await db.query(query, [this.id]);
-      
-      if (result.rows.length === 0) {
-        throw new Error('User not found');
-      }
-
-      // Update instance
-      this.refresh_token = null;
-      this.updated_at = result.rows[0].updated_at;
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Convert to safe object (without password and refresh token)
-  toSafeObject() {
-    return {
-      id: this.id,
-      username: this.username,
-      created_at: this.created_at,
-      updated_at: this.updated_at
-    };
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   FaHome, 
   FaFileAlt, 
@@ -8,13 +9,17 @@ import {
   FaPlus,
   FaBuilding,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaUser,
+  FaSignOutAlt
 } from 'react-icons/fa';
 import './Navbar.css';
 
 const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -26,6 +31,18 @@ const Navbar = () => {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -109,9 +126,36 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <div className="nav-status">
+        <div className="nav-user">
+          <div className="user-menu">
+            <button 
+              className="user-menu-toggle"
+              onClick={toggleUserMenu}
+              aria-label="User menu"
+            >
+              <FaUser className="user-icon" />
+              <span className="user-name">{user?.full_name || user?.email || 'User'}</span>
+            </button>
+            
+            {isUserMenuOpen && (
+              <div className="user-dropdown">
+                <div className="user-info">
+                  <div className="user-name-full">{user?.full_name}</div>
+                  <div className="user-email">{user?.email}</div>
+                </div>
+                <hr />
+                <button 
+                  className="logout-button"
+                  onClick={handleLogout}
+                >
+                  <FaSignOutAlt className="logout-icon" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+          
           <div className="status-indicator online"></div>
-          <span className="status-text">Online</span>
         </div>
       </div>
 

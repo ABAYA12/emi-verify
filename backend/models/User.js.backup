@@ -1,0 +1,440 @@
+const db = require('../config/database');
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+
+class User {
+  constructor(userData) {
+    this.id = userData.id;
+    this.username = userData.username;
+    this.email = userData.email;
+    this.full_name = userData.full_name;
+    // Convert to safe object (exclude sensitive fields)
+  toSafeObject() {
+    return {
+      id: this.id,
+      username: this.username,
+      email: this.email,
+      full_name: this.full_name,
+      verified: this.verified,
+      created_at: this.created_at,
+      updated_at: this.updated_at
+    };
+  }
+
+  // Static methods for verification codes
+  static async createVerificationCode(email) {
+    try {
+      // Generate 6-digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+      // Delete any existing codes for this email
+      await db.query('DELETE FROM verification_codes WHERE email = $1', [email]);
+
+      // Insert new code
+      const query = `
+        INSERT INTO verification_codes (email, code, expires_at)
+        VALUES ($1, $2, $3)
+        RETURNING id, code, expires_at
+      `;
+      
+      const result = await db.query(query, [email, code, expiresAt]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async verifyCode(email, code) {
+    try {
+      const query = `
+        SELECT * FROM verification_codes 
+        WHERE email = $1 AND code = $2 AND expires_at > NOW() AND used = FALSE
+      `;
+      
+      const result = await db.query(query, [email, code]);
+      
+      if (result.rows.length === 0) {
+        return { valid: false, message: 'Code expired or incorrect' };
+      }
+
+      // Mark code as used
+      await db.query(
+        'UPDATE verification_codes SET used = TRUE WHERE id = $1',
+        [result.rows[0].id]
+      );
+
+      return { valid: true, message: 'Code verified successfully' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Static methods for password reset tokens
+  static async createPasswordResetToken(email) {
+    try {
+      const token = uuidv4();
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+      // Delete any existing tokens for this email
+      await db.query('DELETE FROM password_resets WHERE email = $1', [email]);
+
+      // Insert new token
+      const query = `
+        INSERT INTO password_resets (email, token, expires_at)
+        VALUES ($1, $2, $3)
+        RETURNING id, token, expires_at
+      `;
+      
+      const result = await db.query(query, [email, token, expiresAt]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async verifyResetToken(token) {
+    try {
+      const query = `
+        SELECT * FROM password_resets 
+        WHERE token = $1 AND expires_at > NOW() AND used = FALSE
+      `;
+      
+      const result = await db.query(query, [token]);
+      
+      if (result.rows.length === 0) {
+        return { valid: false, message: 'Token expired or invalid' };
+      }
+
+      return { valid: true, email: result.rows[0].email, tokenId: result.rows[0].id };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async markResetTokenUsed(tokenId) {
+    try {
+      await db.query(
+        'UPDATE password_resets SET used = TRUE WHERE id = $1',
+        [tokenId]
+      );
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Cleanup expired tokens and codes
+  static async cleanupExpired() {
+    try {
+      await db.query('SELECT cleanup_expired_tokens()');
+      return true;
+    } catch (error) {
+      console.error('Failed to cleanup expired tokens:', error);
+      return false;
+    }
+  }
+}
+
+module.exports = User;ord = userData.password;
+    this.password_hash = userData.password_hash;
+    this.verified = userData.verified;
+    this.refresh_token = userData.refresh_token;
+    this.created_at = userData.created_at;
+    this.updated_at = userData.updated_at;
+  }
+
+  // Create a new user with email (new registration flow)
+  static async createWithEmail({ fullName, email, password }) {
+    try {
+      // Validate input
+      if (!fullName || !email || !password) {
+        throw new Error('Full name, email and password are required');
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      // Check if email already exists
+      const existingUser = await this.findByEmail(email);
+      if (existingUser) {
+        throw new Error('Email already exists');
+      }
+
+      // Hash password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Insert user into database
+      const userId = uuidv4();
+      const query = `
+        INSERT INTO users (id, full_name, email, password_hash, verified)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, full_name, email, verified, created_at, updated_at
+      `;
+      
+      const result = await db.query(query, [userId, fullName, email, hashedPassword, false]);
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by email
+  static async findByEmail(email) {
+    try {
+      const query = 'SELECT * FROM users WHERE email = $1';
+      const result = await db.query(query, [email]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Create a new user (legacy username-based registration)
+  static async create({ username, password }) {
+    try {
+      // Validate input
+      if (!username || !password) {
+        throw new Error('Username and password are required');
+      }
+
+      // Validate username format
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        throw new Error('Username can only contain letters, numbers, underscores, and hyphens');
+      }
+
+      if (username.length < 3 || username.length > 30) {
+        throw new Error('Username must be between 3 and 30 characters');
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      // Check if username already exists
+      const existingUser = await this.findByUsername(username);
+      if (existingUser) {
+        throw new Error('Username already exists');
+      }
+
+      // Hash password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Insert user into database
+      const userId = uuidv4();
+      const query = `
+        INSERT INTO users (id, username, password)
+        VALUES ($1, $2, $3)
+        RETURNING id, username, created_at, updated_at
+      `;
+      
+      const result = await db.query(query, [userId, username, hashedPassword]);
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by username
+  static async findByUsername(username) {
+    try {
+      const query = 'SELECT * FROM users WHERE username = $1';
+      const result = await db.query(query, [username]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by ID
+  static async findById(id) {
+    try {
+      const query = 'SELECT * FROM users WHERE id = $1';
+      const result = await db.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by refresh token
+  static async findByRefreshToken(refreshToken) {
+    try {
+      const query = 'SELECT * FROM users WHERE refresh_token = $1';
+      const result = await db.query(query, [refreshToken]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Verify password (support both old and new password fields)
+  async verifyPassword(password) {
+    try {
+      // Check new password_hash field first, then fall back to old password field
+      const hashToCheck = this.password_hash || this.password;
+      if (!hashToCheck) {
+        throw new Error('No password set for user');
+      }
+      return await bcrypt.compare(password, hashToCheck);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Update password (for both fields for backward compatibility)
+  async updatePassword(newPassword) {
+    try {
+      // Validate password length
+      if (newPassword.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      // Hash new password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update in database (both fields for compatibility)
+      const query = `
+        UPDATE users 
+        SET password = $1, password_hash = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING id, email, full_name, username, updated_at
+      `;
+      
+      const result = await db.query(query, [hashedPassword, this.id]);
+      
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      // Update instance
+      this.password = hashedPassword;
+      this.password_hash = hashedPassword;
+      this.updated_at = result.rows[0].updated_at;
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Mark user as verified
+  async markAsVerified() {
+    try {
+      const query = `
+        UPDATE users 
+        SET verified = TRUE, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING id, email, verified, updated_at
+      `;
+      
+      const result = await db.query(query, [this.id]);
+      
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      this.verified = true;
+      this.updated_at = result.rows[0].updated_at;
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Update refresh token
+  async updateRefreshToken(refreshToken) {
+    try {
+      const query = `
+        UPDATE users 
+        SET refresh_token = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING updated_at
+      `;
+      
+      const result = await db.query(query, [refreshToken, this.id]);
+      
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      // Update instance
+      this.refresh_token = refreshToken;
+      this.updated_at = result.rows[0].updated_at;
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Remove refresh token (logout)
+  async removeRefreshToken() {
+    try {
+      const query = `
+        UPDATE users 
+        SET refresh_token = NULL, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING updated_at
+      `;
+      
+      const result = await db.query(query, [this.id]);
+      
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      // Update instance
+      this.refresh_token = null;
+      this.updated_at = result.rows[0].updated_at;
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Convert to safe object (without password and refresh token)
+  toSafeObject() {
+    return {
+      id: this.id,
+      username: this.username,
+      created_at: this.created_at,
+      updated_at: this.updated_at
+    };
+  }
+}
+
+module.exports = User;
