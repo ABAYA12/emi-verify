@@ -52,12 +52,12 @@ class User {
    * Find user by email
    */
   static async findByEmail(email) {
-    const query = 'SELECT * FROM users WHERE email = $1';
+    const query = 'SELECT * FROM users WHERE LOWER(email) = LOWER($1)';
     
     try {
       const client = await db.pool.connect();
       try {
-        const result = await client.query(query, [email.toLowerCase()]);
+        const result = await client.query(query, [email.trim()]);
         return result.rows[0] || null;
       } finally {
         client.release();

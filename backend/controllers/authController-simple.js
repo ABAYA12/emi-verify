@@ -117,6 +117,7 @@ const verifyEmail = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('🔑 Login attempt for:', email);
 
     // Validate input
     if (!email || !password) {
@@ -126,8 +127,9 @@ const login = async (req, res) => {
       });
     }
 
-    // Find user
-    const user = await User.findByEmail(email);
+    // Find user (case-insensitive email search)
+    const user = await User.findByEmail(email.toLowerCase().trim());
+    console.log('👤 User found:', user ? 'Yes' : 'No');
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -136,6 +138,7 @@ const login = async (req, res) => {
     }
 
     // Check if email is verified
+    console.log('✅ User verified:', user.verified);
     if (!user.verified) {
       return res.status(401).json({
         success: false,
@@ -144,7 +147,9 @@ const login = async (req, res) => {
     }
 
     // Verify password
+    console.log('🔐 Verifying password...');
     const isValidPassword = await User.verifyPassword(password, user.password);
+    console.log('🔐 Password valid:', isValidPassword);
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
