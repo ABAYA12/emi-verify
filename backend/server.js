@@ -27,7 +27,7 @@ app.use('/api/', limiter);
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? 
     ['https://emiverify.insightgridanalytic.com', 'https://emiverify.insightgridanalytic.com/verify-email'] : 
-    ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+    ['http://3.227.223.115:3000', 'http://3.227.223.115:3001', 'http://3.227.223.115:5173'],
   credentials: true
 }));
 
@@ -338,8 +338,8 @@ app.listen(PORT, () => {
 🚀 EMI Verify API Server is running!
 📍 Port: ${PORT}
 🌍 Environment: ${process.env.NODE_ENV || 'development'}
-📊 Health check: http://localhost:${PORT}/health
-📚 API documentation: http://localhost:${PORT}/api
+📊 Health check: http://3.227.223.115:${PORT}/health
+📚 API documentation: http://3.227.223.115:${PORT}/api
 
 📈 Available Services:
    • Insurance Cases Management

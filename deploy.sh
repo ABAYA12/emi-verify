@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 echo "🚀 Starting EMI Verify deployment on EC2..."
 
-# Colors for output
+# Coloprint_status "🏥 Health check: curl http://3.227.223.115:3001/health"s for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -134,7 +134,7 @@ PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/n
 
 # Check backend health
 for i in {1..10}; do
-    if curl -f http://localhost:3001/health > /dev/null 2>&1; then
+    if curl -f http://3.227.223.115:3001/health > /dev/null 2>&1; then
         print_status "✅ Backend is healthy (local)"
         break
     else
@@ -184,8 +184,8 @@ print_status "Production services are now available:"
 print_status "  🌐 Frontend: https://emiverify.insightgridanalytic.com"
 print_status "  📧 Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
 print_status "  🔌 Backend API: https://emiverify.insightgridanalytic.com/api"
-print_status "  🗄️ PgAdmin: http://$PUBLIC_IP:8080"
-print_status "  📊 Database: $PUBLIC_IP:5432"
+print_status "  🗄️ PgAdmin: http://3.227.223.115:8080"
+print_status "  📊 Database: 3.227.223.115:5432"
 
 echo ""
 print_status "Management commands:"
@@ -204,7 +204,7 @@ docker-compose ps
 echo ""
 echo "🏥 Health Checks:"
 echo -n "Local Backend: "
-curl -s http://localhost:3001/health | jq .status 2>/dev/null || echo "❌ Not responding"
+curl -s http://3.227.223.115:3001/health | jq .status 2>/dev/null || echo "❌ Not responding"
 echo -n "Production Domain: "
 curl -s -k https://emiverify.insightgridanalytic.com/api/health | jq .status 2>/dev/null || echo "❌ Not responding"
 echo -n "Email Verification Page: "
@@ -224,3 +224,4 @@ EOF
 
 chmod +x check-status.sh
 print_status "📊 Status check script created: ./check-status.sh"
+print_status "🏥 Health check: curl http://3.227.223.115:3001/health"

@@ -46,5 +46,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3000"
+  "proxy": "http://3.227.223.115:3001"
 }

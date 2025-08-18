@@ -145,7 +145,7 @@ jobs:
           
           # Check if backend is responding locally
           for i in {1..10}; do
-            if curl -f http://localhost:3001/health > /dev/null 2>&1; then
+            if curl -f http://3.227.223.115:3001/health > /dev/null 2>&1; then
               echo "✅ Backend is healthy (local)"
               break
             else
@@ -193,7 +193,7 @@ jobs:
           echo "   Frontend: https://emiverify.insightgridanalytic.com"
           echo "   Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
           echo "   Backend API: https://emiverify.insightgridanalytic.com/api"
-          echo "   PgAdmin: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080"
+          echo "   PgAdmin: http://3.227.223.115:8080"
 
   test:
     runs-on: ubuntu-latest

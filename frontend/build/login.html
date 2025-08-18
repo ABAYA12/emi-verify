@@ -179,7 +179,7 @@
         <div id="error" class="error"></div>
         <div id="success" class="success"></div>
         
-        <form id="loginForm">
+        <form id="loginForm" method="POST" action="#">
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter your username" required>
@@ -202,15 +202,26 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            console.log('Login form submitted');
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('error');
             const successDiv = document.getElementById('success');
             
+            console.log('Login attempt for username:', username);
+            
             // Hide previous messages
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            console.log('Making login API call...');
             
             try {
                 const response = await fetch('/api/auth/login', {
@@ -221,7 +232,9 @@
                     body: JSON.stringify({ username, password })
                 });
                 
+                console.log('Login API response status:', response.status);
                 const data = await response.json();
+                console.log('Login API response data:', data);
                 
                 if (data.success) {
                     // Store tokens
@@ -229,12 +242,14 @@
                     localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
                     localStorage.setItem('user', JSON.stringify(data.data.user));
                     
-                    successDiv.textContent = 'Login successful! Redirecting...';
+                    successDiv.textContent = 'Login successful! Redirecting to dashboard...';
                     successDiv.style.display = 'block';
                     
                     // Clear form only on success
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
+                    
+                    console.log('Redirecting to dashboard...');
                     
                     // Redirect to main application dashboard
                     setTimeout(() => {
@@ -247,7 +262,7 @@
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.textContent = 'Network error. Please check your connection and try again.';
                 errorDiv.style.display = 'block';
             }
         });
