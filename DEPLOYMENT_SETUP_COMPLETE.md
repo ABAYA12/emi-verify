@@ -55,11 +55,11 @@ Your repository has been configured with the following secrets:
 8. **Health checks** verify all services are running
 9. **Public URLs** are displayed in the deployment logs
 
-## 🌐 Service URLs (After Deployment)
-- **Frontend**: `http://YOUR_EC2_IP:3000`
-- **Backend API**: `http://YOUR_EC2_IP:3001`
-- **PgAdmin**: `http://YOUR_EC2_IP:8080`
-- **Database**: `YOUR_EC2_IP:5432`
+## 🌐 Production Service URLs
+- **Frontend**: `https://emiverify.insightgridanalytic.com`
+- **Email Verification**: `https://emiverify.insightgridanalytic.com/verify-email`
+- **Backend API**: `https://emiverify.insightgridanalytic.com/api`
+- **PgAdmin**: `http://YOUR_EC2_IP:8080` (internal access only)
 
 ## 🎯 Next Steps
 

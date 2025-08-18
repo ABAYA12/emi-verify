@@ -26,7 +26,7 @@ app.use('/api/', limiter);
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? 
-    ['https://your-frontend-domain.com'] : 
+    ['https://emiverify.insightgridanalytic.com', 'https://emiverify.insightgridanalytic.com/verify-email'] : 
     ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
   credentials: true
 }));

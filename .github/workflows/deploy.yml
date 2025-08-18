@@ -106,6 +106,10 @@ jobs:
             sudo chmod +x /usr/local/bin/docker-compose
           fi
           
+          # Set up production environment
+          echo "🔧 Setting up production environment..."
+          cp .env.production backend/.env || echo "No production env file found"
+          
           # Install dependencies
           echo "📦 Installing dependencies..."
           npm run install:all
@@ -113,7 +117,7 @@ jobs:
           # Build frontend
           echo "🏗️ Building frontend..."
           cd frontend
-          npm run build
+          REACT_APP_API_URL=https://emiverify.insightgridanalytic.com/api npm run build
           cd ..
           
           # Stop existing containers gracefully
@@ -139,16 +143,35 @@ jobs:
           # Health checks
           echo "🏥 Running health checks..."
           
-          # Check if backend is responding
+          # Check if backend is responding locally
           for i in {1..10}; do
             if curl -f http://localhost:3001/health > /dev/null 2>&1; then
-              echo "✅ Backend is healthy"
+              echo "✅ Backend is healthy (local)"
               break
             else
               echo "⏳ Waiting for backend... (attempt $i/10)"
               sleep 10
             fi
           done
+          
+          # Check production domain (with retries for DNS propagation)
+          echo "🌐 Testing production domain..."
+          for i in {1..5}; do
+            if curl -f -k https://emiverify.insightgridanalytic.com/api/health > /dev/null 2>&1; then
+              echo "✅ Production domain is accessible"
+              break
+            else
+              echo "⏳ Waiting for domain to be accessible... (attempt $i/5)"
+              sleep 15
+            fi
+          done
+          
+          # Check email verification endpoint
+          if curl -f -k https://emiverify.insightgridanalytic.com/verify-email > /dev/null 2>&1; then
+            echo "✅ Email verification endpoint is accessible"
+          else
+            echo "⚠️ Email verification endpoint check failed"
+          fi
           
           # Check if database is accessible
           if docker-compose exec -T postgres pg_isready -U emi_admin > /dev/null 2>&1; then
@@ -166,9 +189,10 @@ jobs:
           docker-compose logs --tail=20
           
           echo "🎉 Deployment completed successfully!"
-          echo "🌐 Services available at:"
-          echo "   Frontend: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3000"
-          echo "   Backend API: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):3001"
+          echo "🌐 Production services available at:"
+          echo "   Frontend: https://emiverify.insightgridanalytic.com"
+          echo "   Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
+          echo "   Backend API: https://emiverify.insightgridanalytic.com/api"
           echo "   PgAdmin: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080"
 
   test:

@@ -89,14 +89,17 @@ npm run install:all || {
     exit 1
 }
 
+print_step "Setting up production environment..."
+cp .env.production backend/.env || print_warning "No production env file found"
+
 print_step "Running backend tests..."
 npm run test:backend || {
     print_warning "Backend tests failed, but continuing deployment..."
 }
 
-print_step "Building frontend..."
+print_step "Building frontend with production API URL..."
 cd frontend
-npm run build || {
+REACT_APP_API_URL=https://emiverify.insightgridanalytic.com/api npm run build || {
     print_error "Frontend build failed!"
     exit 1
 }
@@ -132,13 +135,32 @@ PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/n
 # Check backend health
 for i in {1..10}; do
     if curl -f http://localhost:3001/health > /dev/null 2>&1; then
-        print_status "✅ Backend is healthy"
+        print_status "✅ Backend is healthy (local)"
         break
     else
         print_warning "⏳ Waiting for backend... (attempt $i/10)"
         sleep 10
     fi
 done
+
+# Check production domain
+print_status "🌐 Testing production domain..."
+for i in {1..5}; do
+    if curl -f -k https://emiverify.insightgridanalytic.com/api/health > /dev/null 2>&1; then
+        print_status "✅ Production domain is accessible"
+        break
+    else
+        print_warning "⏳ Waiting for domain to be accessible... (attempt $i/5)"
+        sleep 15
+    fi
+done
+
+# Check email verification endpoint
+if curl -f -k https://emiverify.insightgridanalytic.com/verify-email > /dev/null 2>&1; then
+    print_status "✅ Email verification endpoint is accessible"
+else
+    print_warning "⚠️ Email verification endpoint check failed"
+fi
 
 # Check if frontend build exists
 if [ -d "frontend/build" ] || [ -d "frontend/dist" ]; then
@@ -158,9 +180,10 @@ print_step "Checking service status..."
 docker-compose ps
 
 print_step "🎉 Deployment completed!"
-print_status "Services are now available:"
-print_status "  🌐 Frontend: http://$PUBLIC_IP:3000"
-print_status "  🔌 Backend API: http://$PUBLIC_IP:3001"
+print_status "Production services are now available:"
+print_status "  🌐 Frontend: https://emiverify.insightgridanalytic.com"
+print_status "  📧 Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
+print_status "  🔌 Backend API: https://emiverify.insightgridanalytic.com/api"
 print_status "  🗄️ PgAdmin: http://$PUBLIC_IP:8080"
 print_status "  📊 Database: $PUBLIC_IP:5432"
 
@@ -174,15 +197,29 @@ print_status "  🏥 Health check: curl http://localhost:3001/health"
 # Create a status check script
 cat > check-status.sh << 'EOF'
 #!/bin/bash
-echo "=== EMI Verify Status Check ==="
-echo "Containers:"
+echo "=== EMI Verify Production Status Check ==="
+echo ""
+echo "🐳 Docker Containers:"
 docker-compose ps
 echo ""
-echo "Health Checks:"
-curl -s http://localhost:3001/health | jq . 2>/dev/null || echo "Backend not responding"
+echo "🏥 Health Checks:"
+echo -n "Local Backend: "
+curl -s http://localhost:3001/health | jq .status 2>/dev/null || echo "❌ Not responding"
+echo -n "Production Domain: "
+curl -s -k https://emiverify.insightgridanalytic.com/api/health | jq .status 2>/dev/null || echo "❌ Not responding"
+echo -n "Email Verification Page: "
+curl -s -o /dev/null -w "%{http_code}" https://emiverify.insightgridanalytic.com/verify-email || echo "❌ Not responding"
 echo ""
-echo "Recent Logs:"
+echo "📊 Database Status:"
+docker-compose exec -T postgres pg_isready -U emi_admin 2>/dev/null && echo "✅ Database ready" || echo "❌ Database not ready"
+echo ""
+echo "📝 Recent Logs (last 10 lines):"
 docker-compose logs --tail=10
+echo ""
+echo "🌐 Production URLs:"
+echo "   Frontend: https://emiverify.insightgridanalytic.com"
+echo "   Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
+echo "   Backend API: https://emiverify.insightgridanalytic.com/api"
 EOF
 
 chmod +x check-status.sh
