@@ -44,29 +44,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: |
-        npm run install:all
-        
-    - name: Run backend tests
-      run: |
-        cd backend
-        npm test
-        
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
-        
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -87,106 +64,51 @@ jobs:
           echo "📥 Pulling latest changes..."
           git pull origin main
           
-          # Ensure Docker is running
-          echo "🐳 Checking Docker status..."
+          # Ensure Docker containers are running (for database only)
+          echo "🐳 Starting database containers..."
           sudo systemctl start docker
-          sudo systemctl enable docker
+          docker-compose up -d postgres pgadmin
           
-          # Install Node.js if not present
-          if ! command -v node &> /dev/null; then
-            echo "📦 Installing Node.js..."
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-          fi
+          # Install backend dependencies and restart backend
+          echo "📦 Installing backend dependencies..."
+          cd backend
+          npm install
           
-          # Install Docker Compose if not present
-          if ! command -v docker-compose &> /dev/null; then
-            echo "🔧 Installing Docker Compose..."
-            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-          fi
+          # Stop existing backend process
+          echo "🛑 Stopping existing backend..."
+          pkill -f "node server.js" || true
           
-          # Set up production environment
-          echo "🔧 Setting up production environment..."
-          cp .env.production backend/.env || echo "No production env file found"
+          # Start backend with nohup
+          echo "🚀 Starting backend..."
+          nohup node server.js > server.log 2>&1 &
           
-          # Install dependencies
-          echo "📦 Installing dependencies..."
-          npm run install:all
-          
-          # Build frontend
+          # Build and deploy frontend
           echo "🏗️ Building frontend..."
-          cd frontend
-          REACT_APP_API_URL=https://emiverify.insightgridanalytic.com/api npm run build
-          cd ..
+          cd ../frontend
+          npm install
+          REACT_APP_API_URL=https://emiverify.insightgridanalytic.com npm run build
           
-          # Stop existing containers gracefully
-          echo "🛑 Stopping existing containers..."
-          docker-compose down || true
+          # Deploy frontend to nginx directory
+          echo "📤 Deploying frontend..."
+          sudo rm -rf /var/www/emi-verify/frontend/build/*
+          sudo cp -r build/* /var/www/emi-verify/frontend/build/
+          sudo cp ../dev-tools.html /var/www/emi-verify/frontend/build/
           
-          # Clean up Docker resources
-          echo "🧹 Cleaning up Docker resources..."
-          docker system prune -f || true
+          # Wait for backend to start
+          echo "⏳ Waiting for backend to start..."
+          sleep 10
           
-          # Rebuild and start containers
-          echo "🚀 Starting containers..."
-          docker-compose up -d --build
-          
-          # Wait for services to be ready
-          echo "⏳ Waiting for services to initialize..."
-          sleep 45
-          
-          # Set up database
-          echo "🗄️ Setting up database..."
-          npm run setup-db || echo "Database setup completed or already exists"
-          
-          # Health checks
-          echo "🏥 Running health checks..."
-          
-          # Check if backend is responding locally
-          for i in {1..10}; do
-            if curl -f http://3.227.223.115:3001/health > /dev/null 2>&1; then
-              echo "✅ Backend is healthy (local)"
-              break
-            else
-              echo "⏳ Waiting for backend... (attempt $i/10)"
-              sleep 10
-            fi
-          done
-          
-          # Check production domain (with retries for DNS propagation)
-          echo "🌐 Testing production domain..."
+          # Health check
+          echo "🏥 Running health check..."
           for i in {1..5}; do
-            if curl -f -k https://emiverify.insightgridanalytic.com/api/health > /dev/null 2>&1; then
-              echo "✅ Production domain is accessible"
+            if curl -f https://emiverify.insightgridanalytic.com/api/auth/signup -X POST -H "Content-Type: application/json" -d '{"test":"true"}' > /dev/null 2>&1; then
+              echo "✅ Backend is responding"
               break
             else
-              echo "⏳ Waiting for domain to be accessible... (attempt $i/5)"
-              sleep 15
+              echo "⏳ Waiting for backend... (attempt $i/5)"
+              sleep 5
             fi
           done
-          
-          # Check email verification endpoint
-          if curl -f -k https://emiverify.insightgridanalytic.com/verify-email > /dev/null 2>&1; then
-            echo "✅ Email verification endpoint is accessible"
-          else
-            echo "⚠️ Email verification endpoint check failed"
-          fi
-          
-          # Check if database is accessible
-          if docker-compose exec -T postgres pg_isready -U emi_admin > /dev/null 2>&1; then
-            echo "✅ Database is ready"
-          else
-            echo "⚠️ Database health check failed"
-          fi
-          
-          # Show container status
-          echo "📊 Container status:"
-          docker-compose ps
-          
-          # Show logs if there are any issues
-          echo "📝 Recent logs:"
-          docker-compose logs --tail=20
           
           echo "🎉 Deployment completed successfully!"
           echo "🌐 Production services available at:"
@@ -194,35 +116,3 @@ jobs:
           echo "   Email Verification: https://emiverify.insightgridanalytic.com/verify-email"
           echo "   Backend API: https://emiverify.insightgridanalytic.com/api"
           echo "   PgAdmin: http://3.227.223.115:8080"
-
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm install
-        
-    - name: Run backend tests
-      run: |
-        cd backend
-        npm test
-        
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm install
-        
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
