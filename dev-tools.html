@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Verify - Development Tools</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+        }
+        h2 {
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .code-display {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛠️ EMI Verify Development Tools</h1>
+    
+    <div class="card">
+        <h2>📧 Get Verification Code</h2>
+        <p>Get the verification code for any email address (since email sending is not working).</p>
+        
+        <div class="form-group">
+            <label for="getCodeEmail">Email Address:</label>
+            <input type="email" id="getCodeEmail" placeholder="Enter email address">
+        </div>
+        
+        <button onclick="getVerificationCode()">Get Verification Code</button>
+        
+        <div id="codeResult" class="result"></div>
+    </div>
+    
+    <div class="card">
+        <h2>✅ Manual Verification</h2>
+        <p>Manually verify a user account (bypass email verification completely).</p>
+        
+        <div class="form-group">
+            <label for="verifyEmail">Email Address:</label>
+            <input type="email" id="verifyEmail" placeholder="Enter email address">
+        </div>
+        
+        <button onclick="manualVerify()">Verify User</button>
+        
+        <div id="verifyResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://emiverify.insightgridanalytic.com/api/auth';
+        
+        async function getVerificationCode() {
+            const email = document.getElementById('getCodeEmail').value;
+            const resultDiv = document.getElementById('codeResult');
+            
+            if (!email) {
+                showResult(resultDiv, 'Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/dev-get-code/${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="code-display">${data.data.code}</div>
+                        <p><strong>Email:</strong> ${data.data.email}</p>
+                        <p><strong>Expires:</strong> ${new Date(data.data.expires_at).toLocaleString()}</p>
+                    `;
+                    resultDiv.className = 'result success';
+                    resultDiv.style.display = 'block';
+                } else {
+                    showResult(resultDiv, data.message, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to get verification code: ' + error.message, 'error');
+            }
+        }
+        
+        async function manualVerify() {
+            const email = document.getElementById('verifyEmail').value;
+            const resultDiv = document.getElementById('verifyResult');
+            
+            if (!email) {
+                showResult(resultDiv, 'Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/dev-verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult(resultDiv, `✅ User ${email} has been verified successfully!`, 'success');
+                } else {
+                    showResult(resultDiv, data.message, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, 'Failed to verify user: ' + error.message, 'error');
+            }
+        }
+        
+        function showResult(element, message, type) {
+            element.innerHTML = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

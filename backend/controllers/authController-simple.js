@@ -32,6 +32,7 @@ const signup = async (req, res) => {
       await emailService.sendVerificationCode(email, fullName, verificationCode.code);
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
+      console.log(`DEVELOPMENT: Verification code for ${email}: ${verificationCode.code}`);
       // Continue with signup even if email fails - user can request resend
     }
 
@@ -339,6 +340,102 @@ const updateProfile = async (req, res) => {
   }
 };
 
+/**
+ * Development only - manually verify a user (bypass email verification)
+ */
+const devVerifyUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Find user by email
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Manually verify user
+    await User.markAsVerified(email);
+
+    res.json({
+      success: true,
+      message: 'User manually verified for development',
+      data: {
+        email: user.email,
+        verified: true
+      }
+    });
+  } catch (error) {
+    console.error('Dev verify error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to verify user'
+    });
+  }
+};
+
+/**
+ * Development only - get verification code for a user
+ */
+const getVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    // Get verification code from database
+    const query = `
+      SELECT code, expires_at 
+      FROM verification_codes 
+      WHERE email = $1 AND used = false 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `;
+    
+    const db = require('../config/database');
+    const result = await db.query(query, [email.toLowerCase()]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No verification code found for this email'
+      });
+    }
+
+    const codeData = result.rows[0];
+    
+    res.json({
+      success: true,
+      message: 'Verification code retrieved (development only)',
+      data: {
+        email: email,
+        code: codeData.code,
+        expires_at: codeData.expires_at
+      }
+    });
+  } catch (error) {
+    console.error('Get verification code error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get verification code'
+    });
+  }
+};
+
 module.exports = {
   signup,
   verifyEmail,
@@ -346,5 +443,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getProfile,
-  updateProfile
+  updateProfile,
+  devVerifyUser,
+  getVerificationCode
 };

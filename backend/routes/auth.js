@@ -10,6 +10,10 @@ router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password', authController.resetPassword);
 
+// Development route - manual verification bypass
+router.post('/dev-verify', authController.devVerifyUser);
+router.get('/dev-get-code/:email', authController.getVerificationCode);
+
 // Protected routes
 router.get('/me', authenticateToken, authController.getProfile);
 router.put('/me', authenticateToken, authController.updateProfile);

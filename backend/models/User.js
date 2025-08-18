@@ -299,6 +299,33 @@ class User {
       throw new Error('Failed to update profile: ' + error.message);
     }
   }
+
+  /**
+   * Manually mark user as verified (for development)
+   */
+  static async markAsVerified(email) {
+    const query = `
+      UPDATE users 
+      SET verified = true, updated_at = NOW() 
+      WHERE email = $1
+      RETURNING id, full_name, email, verified, created_at
+    `;
+    
+    try {
+      const client = await db.pool.connect();
+      try {
+        const result = await client.query(query, [email.toLowerCase()]);
+        if (result.rows.length === 0) {
+          throw new Error('User not found');
+        }
+        return result.rows[0];
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      throw new Error('Failed to verify user: ' + error.message);
+    }
+  }
 }
 
 module.exports = User;
