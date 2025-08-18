@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaChartLine, 
   FaDownload, 
   FaSync,
   FaFileInvoiceDollar,
@@ -10,14 +9,9 @@ import {
   FaCheckCircle,
   FaArrowUp,
   FaShieldAlt,
-  FaGlobe,
   FaFileAlt
 } from 'react-icons/fa';
 import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
   BarChart,
   Bar,
   PieChart,
@@ -27,7 +21,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer
 } from 'recharts';
 import { apiService } from '../services/api';

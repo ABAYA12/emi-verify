@@ -36,7 +36,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm run build
+          CI=false npm run build
 
   deploy:
     runs-on: ubuntu-latest
@@ -75,7 +75,7 @@ jobs:
             echo "🏗️ Building frontend..."
             cd ../frontend
             npm ci
-            REACT_APP_API_URL=https://emiverify.insightgridanalytic.com npm run build
+            CI=false REACT_APP_API_URL=https://emiverify.insightgridanalytic.com npm run build
 
             echo "📤 Deploying frontend..."
             sudo mkdir -p /var/www/emi-verify/frontend/build

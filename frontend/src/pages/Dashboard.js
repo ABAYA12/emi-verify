@@ -4,14 +4,12 @@ import {
   FaClipboardCheck, 
   FaChartLine, 
   FaDollarSign,
-  FaExclamationTriangle,
   FaClock,
   FaUsers,
   FaGlobe
 } from 'react-icons/fa';
 import { apiService } from '../services/api';
 import StatCard from '../components/StatCard';
-import ChartCard from '../components/ChartCard';
 import './Dashboard.css';
 
 const Dashboard = () => {

@@ -6,8 +6,7 @@ import {
   FaTrash, 
   FaDownload, 
   FaFilter,
-  FaSearch,
-  FaEye
+  FaSearch
 } from 'react-icons/fa';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -26,7 +25,6 @@ const InsuranceCases = () => {
     case_status: ''
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCases, setSelectedCases] = useState([]);
 
   useEffect(() => {
     fetchCases();
